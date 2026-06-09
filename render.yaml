@@ -1,0 +1,70 @@
+# Render Blueprint — نشر Laravel من GitHub
+# https://render.com/docs/blueprint-spec
+#
+# بعد ربط GitHub:
+# 1. Dashboard → New → Blueprint → اختر هذا المستودع
+# 2. أضف APP_KEY و JWT_SECRET من: php artisan key:generate --show
+# 3. حدّث APP_URL برابط Render
+
+databases:
+  - name: zinou-tv-db
+    plan: free
+    databaseName: sport_iptv
+    user: sport_iptv
+
+services:
+  - type: web
+    name: zinou-tv-api
+    runtime: php
+    plan: free
+    rootDir: backend
+    buildCommand: |
+      composer install --no-dev --optimize-autoloader
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
+    healthCheckPath: /
+    envVars:
+      - key: APP_NAME
+        value: ZINOU TV
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: X_API_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        fromDatabase:
+          name: zinou-tv-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: zinou-tv-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: zinou-tv-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: zinou-tv-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: zinou-tv-db
+          property: password
+      - key: CACHE_STORE
+        value: database
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database

@@ -1,0 +1,48 @@
+# نشر تلقائي للـ Backend عند الدفع إلى main
+# يعمل مع سيرفرك الحالي (DuckDNS/VPS) عبر SSH
+#
+# أضف في GitHub → Settings → Secrets:
+#   SSH_HOST      = عنوان السيرفر (مثال: zinoutv.duckdns.org)
+#   SSH_USER      = اسم المستخدم (مثال: root أو ubuntu)
+#   SSH_PRIVATE_KEY = المفتاح الخاص SSH
+#   DEPLOY_PATH   = مسار المشروع على السيرفر (مثال: /var/www/sport)
+
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository != ''
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH || '/var/www/sport' }}
+            git fetch origin main
+            git reset --hard origin/main
+            cd backend
+            composer install --no-dev --optimize-autoloader --no-interaction
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan storage:link 2>/dev/null || true
+            echo "Deploy completed at $(date)"

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ZINOU Tv</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_channels">Channels</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Splash Screen -->
+    <string name="splash_loading">Initializing Secure Session…</string>
+    <string name="splash_verifying">Verifying License…</string>
+
+    <!-- Login -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Login with your activated credentials</string>
+    <string name="login_email">Email Address</string>
+    <string name="login_password">Password</string>
+    <string name="login_button">Sign In</string>
+    <string name="login_or_activate">Need to activate a new code?</string>
+    <string name="login_activate_now">Activate License</string>
+    <string name="login_error_empty">Fields cannot be empty</string>
+
+    <!-- Activation -->
+    <string name="activate_title">Activate License</string>
+    <string name="activate_subtitle">Enter your activation code to bind this device</string>
+    <string name="activate_code">Activation Code</string>
+    <string name="activate_button">Activate Device</string>
+    <string name="activate_success">Device activated successfully!</string>
+    <string name="activate_error_invalid">Invalid code format. Format: ABCD-1234-EFGH-5678</string>
+    
+    <!-- Home / Main -->
+    <string name="home_featured">Featured Channels</string>
+    <string name="home_live">LIVE</string>
+    <string name="home_recent">Recently Watched</string>
+    <string name="home_no_featured">No featured channels available</string>
+
+    <!-- Channels -->
+    <string name="channels_all">All Channels</string>
+    <string name="channels_search">Search channels…</string>
+    <string name="channels_empty">No channels found in this category</string>
+
+    <!-- Player -->
+    <string name="player_connecting">Connecting to secure stream…</string>
+    <string name="player_reconnecting">Stream lost. Reconnecting…</string>
+    <string name="player_quality">Quality</string>
+    <string name="player_fullscreen">Fullscreen</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_sub_info">Subscription Info</string>
+    <string name="settings_sub_status">Status</string>
+    <string name="settings_sub_expires">Expires At</string>
+    <string name="settings_sub_days">Days Remaining</string>
+    <string name="settings_device_id">Device Signature</string>
+    
+    <string name="settings_cache">Clear Cache</string>
+    <string name="settings_cache_desc">Clear cached channels database</string>
+    <string name="settings_cache_success">Cache cleared successfully</string>
+    
+    <string name="settings_logout">Logout</string>
+    <string name="settings_logout_confirm">Are you sure you want to log out? This will clear your credentials on this device.</string>
+    <string name="settings_about">About ZINOU Tv</string>
+    <string name="settings_about_desc">v1.0.0 — Production Ready Native IPTV Client</string>
+
+    <!-- Common errors -->
+    <string name="error_generic">An error occurred. Please try again.</string>
+    <string name="error_network">Check your network connection.</string>
+    <string name="error_unauthorized">Session expired. Please log in again.</string>
+    <string name="error_security">Security verification failed (device modification detected).</string>
+    <string name="retry">Retry</string>
+</resources>

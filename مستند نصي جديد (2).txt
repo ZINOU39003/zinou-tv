@@ -1,0 +1,4 @@
+python tod_auto_updater.py
+
+
+e:\sport\ngrok.exe config add-authtoken 3EihRHPpsDVOJavFa0Sc0Ik3YQu_4KrBTPjbZhiPbRs3AqpBV

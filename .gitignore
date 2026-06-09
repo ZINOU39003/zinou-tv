@@ -1,0 +1,66 @@
+# Secrets & environment
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Laravel
+backend/vendor/
+backend/node_modules/
+backend/storage/*.key
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/app/public/*
+backend/bootstrap/cache/*
+!backend/storage/**/.gitignore
+!backend/bootstrap/cache/.gitignore
+
+# Android
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/**/*.apk
+android/**/*.aab
+android/captures/
+android/.cxx/
+*.iml
+
+# Build artifacts
+*.apk
+*.aab
+app-debug.apk
+ZINOU-TV-*.apk
+
+# Tools & scrapers (not part of the app)
+ngrok.exe
+cloudflared.exe
+tod_*
+scratch/
+tod_chrome_profile/
+*.log
+processes.txt
+netstat.txt
+tail.log
+scraper_*
+empty_config.yml
+run_*.bat
+start_all.bat
+login_tod.bat
+duckdns_updater.py
+duckdns.log
+run_duckdns_updater.bat
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.cursor/
+*.swp
+*.swo
+
+# Misc
+assets/

@@ -1,0 +1,23 @@
+اكتب الأمر التالي واضغط Enter:
+
+cmd
+ngrok
+
+.\ngrok.exe http 8000
+💡 تذكير سريع بالترتيب الصحيح للنوافذ:
+النافذة الأولى (خاصة بسيرفر Laravel):
+
+تقف عند المسار: E:\sport\backend
+الأمر المشغل فيها: set PHP_CLI_SERVER_WORKERS=8 && php artisan serve --host=0.0.0.0 --port=8000
+النافذة الثانية (خاصة بـ ngrok):
+
+تقف عند المسار: E:\sport
+الأمر المشغل فيها: .\ngrok.exe http 8000
+
+
+توقيف ngrok
+taskkill /f /im ngrok.exe
+
+
+النسخ التلقائي 
+python tod_auto_updater.py
