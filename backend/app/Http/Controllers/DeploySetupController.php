@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DeploySetupController extends Controller
 {
@@ -27,26 +28,46 @@ class DeploySetupController extends Controller
             'ssl_ca' => env('MYSQL_ATTR_SSL_CA') ?: '(auto for aiven)',
         ];
 
-        try {
-            Artisan::call('config:clear');
-            Artisan::call('migrate', ['--force' => true]);
-            $steps['migrate'] = trim(Artisan::output()) ?: 'OK';
-        } catch (\Throwable $e) {
-            $steps['migrate'] = 'FAILED: '.$e->getMessage();
+        $needsReset = Schema::hasTable('users') && ! Schema::hasColumn('users', 'name');
+        if ($needsReset) {
+            $steps['warning'] = 'Old incompatible users table found. Use ?reset=1 in URL to recreate all tables.';
         }
 
         try {
-            Artisan::call('db:seed', [
-                '--class' => 'Database\\Seeders\\AdminSeeder',
-                '--force' => true,
-            ]);
-            $steps['seed'] = trim(Artisan::output()) ?: 'OK';
+            Artisan::call('config:clear');
+
+            if ($request->query('reset') === '1') {
+                Artisan::call('migrate:fresh', [
+                    '--force' => true,
+                    '--seeder' => 'Database\\Seeders\\AdminSeeder',
+                ]);
+                $steps['migrate'] = 'FRESH OK — all tables recreated';
+                $steps['seed'] = 'OK — admin user created';
+            } else {
+                Artisan::call('migrate', ['--force' => true]);
+                $steps['migrate'] = trim(Artisan::output()) ?: 'OK';
+
+                Artisan::call('db:seed', [
+                    '--class' => 'Database\\Seeders\\AdminSeeder',
+                    '--force' => true,
+                ]);
+                $steps['seed'] = trim(Artisan::output()) ?: 'OK';
+            }
         } catch (\Throwable $e) {
-            $steps['seed'] = 'FAILED: '.$e->getMessage();
+            $steps['migrate'] = 'FAILED: '.$e->getMessage();
+            if (! isset($steps['seed'])) {
+                $steps['seed'] = 'skipped';
+            }
+            if ($needsReset || str_contains($e->getMessage(), 'already exists')) {
+                $steps['fix'] = 'Open this URL: /deploy/setup/'.$token.'?reset=1';
+            }
         }
 
         try {
             $steps['users_count'] = DB::table('users')->count();
+            $steps['admin_exists'] = DB::table('users')
+                ->whereIn('email', ['admin@sportiptv.com', 'admin@zinoutv.com'])
+                ->exists() ? 'yes' : 'no';
         } catch (\Throwable $e) {
             $steps['users_count'] = 'FAILED: '.$e->getMessage();
         }
@@ -54,7 +75,7 @@ class DeploySetupController extends Controller
         return response()->json([
             'status' => 'done',
             'message' => 'Remove DEPLOY_SETUP_KEY from Render after success.',
-            'admin_email' => 'admin@sportiptv.com',
+            'admin_emails' => ['admin@sportiptv.com', 'admin@zinoutv.com'],
             'admin_password' => 'password',
             'steps' => $steps,
         ], 200, [], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

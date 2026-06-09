@@ -19,5 +19,15 @@ class AdminSeeder extends Seeder
                 'is_active' => true,
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'admin@zinoutv.com'],
+            [
+                'name' => 'Zinou TV Admin',
+                'password' => 'password',
+                'role' => UserRole::ADMIN,
+                'is_active' => true,
+            ]
+        );
     }
 }
