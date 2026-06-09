@@ -1,45 +1,57 @@
 FROM php:8.2-apache
 
-# تثبيت المكتبات المطلوبة
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
+# امتدادات PHP المطلوبة لـ Laravel 11
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
-    && docker-php-ext-install pdo pdo_mysql \
+    unzip \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libicu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_mysql \
+        mbstring \
+        xml \
+        zip \
+        bcmath \
+        intl \
+        opcache \
+        gd \
     && rm -rf /var/lib/apt/lists/*
 
-# تثبيت Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# تحديد مجلد العمل للمشروع
-WORKDIR /app
-
-# نسخ المشروع
-COPY . .
-
-# الانتقال لـ backend والتثبيت
 WORKDIR /app/backend
 
-RUN composer install --no-dev --optimize-autoloader
+# تثبيت الاعتماديات أولاً (طبقة cache أسرع)
+COPY backend/composer.json backend/composer.lock ./
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts
 
-# بناء Cache
-RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+# نسخ باقي المشروع
+COPY backend/ ./
 
-# العودة للجذر
-WORKDIR /app
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-interaction
 
-# تفعيل mod_rewrite
+RUN cp .env.example .env \
+    && php artisan key:generate --force \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 RUN a2enmod rewrite
+COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 
-# تحديث apache config للإشارة إلى public
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /app/backend/public|g' /etc/apache2/sites-available/000-default.conf
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
 
-# تعيين أذونات
-RUN chmod -R 755 /app/backend/storage
-RUN chmod -R 755 /app/backend/bootstrap/cache
-
-# عرض المنفذ
 EXPOSE 80
 
-# تشغيل Apache
-CMD ["apache2-foreground"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

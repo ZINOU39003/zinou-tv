@@ -1,0 +1,33 @@
+# Android (not needed for backend image)
+android/
+*.apk
+*.aab
+
+# Git & IDE
+.git/
+.github/
+.cursor/
+.idea/
+*.iml
+
+# Secrets
+.env
+.env.*
+!backend/.env.example
+
+# Laravel runtime (rebuilt in container)
+backend/vendor/
+backend/node_modules/
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+# Tools & misc
+ngrok.exe
+cloudflared.exe
+tod_*
+scratch/
+*.log
+assets/
+README.md
