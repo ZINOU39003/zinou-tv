@@ -10,14 +10,14 @@ services:
   - type: web
     name: zinou-tv-api
     plan: free
-    rootDir: backend
+    root: backend
     buildCommand: |
       composer install --no-dev --optimize-autoloader
       php artisan config:cache
       php artisan route:cache
       php artisan view:cache
     startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: APP_NAME
         value: ZINOU TV
