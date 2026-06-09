@@ -17,8 +17,18 @@ class DeploySetupController extends Controller
         }
 
         $steps = [];
+        $steps['db_check'] = [
+            'host' => env('DB_HOST') ?: '(empty)',
+            'port' => env('DB_PORT') ?: '(empty)',
+            'database' => env('DB_DATABASE') ?: '(empty)',
+            'username' => env('DB_USERNAME') ?: '(empty)',
+            'password_set' => env('DB_PASSWORD') ? 'yes ('.strlen((string) env('DB_PASSWORD')).' chars)' : 'NO — add DB_PASSWORD in Render',
+            'db_url_set' => env('DB_URL') ? 'yes — remove DB_URL if using DB_* vars' : 'no',
+            'ssl_ca' => env('MYSQL_ATTR_SSL_CA') ?: '(auto for aiven)',
+        ];
 
         try {
+            Artisan::call('config:clear');
             Artisan::call('migrate', ['--force' => true]);
             $steps['migrate'] = trim(Artisan::output()) ?: 'OK';
         } catch (\Throwable $e) {

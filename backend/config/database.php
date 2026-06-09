@@ -57,23 +57,19 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_merge(
-                \Illuminate\Support\Arr::whereNotNull([
-                    PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA') ?: (
-                        str_contains((string) env('DB_HOST', ''), 'aivencloud.com')
-                            ? '/etc/ssl/certs/ca-certificates.crt'
-                            : null
-                    ),
-                ]),
-                (str_contains((string) env('DB_HOST', ''), 'aivencloud.com') || env('DB_SSL', false))
-                    ? [
-                        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => filter_var(
-                            env('MYSQL_ATTR_SSL_VERIFY', false),
-                            FILTER_VALIDATE_BOOLEAN
+            'options' => extension_loaded('pdo_mysql')
+                ? (str_contains((string) env('DB_HOST', ''), 'aivencloud.com') || filter_var(env('DB_SSL', false), FILTER_VALIDATE_BOOLEAN)
+                    ? array_filter([
+                        PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA') ?: (
+                            str_contains((string) env('DB_HOST', ''), 'aivencloud.com')
+                                ? '/etc/ssl/certs/ca-certificates.crt'
+                                : null
                         ),
-                    ]
-                    : []
-            ) : [],
+                        // PDO يتطلب boolean وليس string "false" من Render Environment
+                        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                    ], fn ($value) => $value !== null)
+                    : [])
+                : [],
         ],
 
         'mariadb' => [
