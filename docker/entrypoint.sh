@@ -19,7 +19,20 @@ fi
 
 php artisan package:discover --ansi || true
 php artisan config:clear
-php artisan migrate --force --no-interaction || true
+php artisan route:clear
+php artisan view:clear
+
+echo "==> Testing database connection..."
+if php artisan migrate --force --no-interaction; then
+    echo "==> Migrations completed"
+else
+    echo "==> WARN: migrations failed — using file session/cache until DB is fixed"
+    export SESSION_DRIVER=file
+    export CACHE_STORE=file
+    export QUEUE_CONNECTION=sync
+    php artisan config:clear
+fi
+
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
