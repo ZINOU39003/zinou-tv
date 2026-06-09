@@ -1,23 +1,16 @@
-# Render Blueprint — نشر Laravel من GitHub
+# Render Blueprint — نشر Laravel من GitHub مع Docker
 # https://render.com/docs/blueprint-spec
 #
 # بعد ربط GitHub:
 # 1. Dashboard → New → Blueprint → اختر هذا المستودع
-# 2. أضف APP_KEY و JWT_SECRET من: php artisan key:generate --show
-# 3. حدّث APP_URL برابط Render
+# 2. أضف APP_KEY و JWT_SECRET و متغيرات قاعدة البيانات
+# 3. سيتم النشر تلقائياً باستخدام Dockerfile
 
 services:
   - type: web
     name: zinou-tv-api
     plan: free
-    root: backend
-    buildCommand: |
-      composer install --no-dev --optimize-autoloader
-      php artisan config:cache
-      php artisan route:cache
-      php artisan view:cache
-    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
-    healthCheckPath: /api/health
+    dockerfile: ./Dockerfile
     envVars:
       - key: APP_NAME
         value: ZINOU TV
