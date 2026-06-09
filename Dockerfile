@@ -39,12 +39,21 @@ RUN COMPOSER_ALLOW_SUPERUSER=1 composer install \
 # نسخ باقي المشروع
 COPY backend/ ./
 
-RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-interaction
-
-RUN cp .env.example .env \
-    && php artisan key:generate --force \
+# Laravel يحتاج هذه المجلدات قبل تشغيل artisan/composer scripts
+RUN mkdir -p \
+    storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
+
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer dump-autoload --optimize --no-interaction --no-scripts
+
+RUN cp .env.example .env \
+    && php artisan key:generate --force
 
 RUN a2enmod rewrite
 COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
