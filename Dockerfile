@@ -11,23 +11,28 @@ RUN apt-get update && apt-get install -y \
 # تثبيت Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# تحديد مجلد العمل
+# تحديد مجلد العمل للمشروع
 WORKDIR /app
 
 # نسخ المشروع
 COPY . .
 
-# تثبيت Dependencies
-RUN cd backend && composer install --no-dev --optimize-autoloader
+# الانتقال لـ backend والتثبيت
+WORKDIR /app/backend
+
+RUN composer install --no-dev --optimize-autoloader
 
 # بناء Cache
-RUN cd backend && php artisan config:cache && php artisan route:cache && php artisan view:cache
+RUN php artisan config:cache && php artisan route:cache && php artisan view:cache
+
+# العودة للجذر
+WORKDIR /app
 
 # تفعيل mod_rewrite
 RUN a2enmod rewrite
 
 # تحديث apache config للإشارة إلى public
-RUN sed -i 's|/var/www/html|/app/backend/public|g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /app/backend/public|g' /etc/apache2/sites-available/000-default.conf
 
 # تعيين أذونات
 RUN chmod -R 755 /app/backend/storage
