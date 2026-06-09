@@ -22,11 +22,14 @@ php artisan config:clear
 php artisan route:clear
 php artisan view:clear
 
-echo "==> Testing database connection..."
-if php artisan migrate --force --no-interaction; then
-    echo "==> Migrations completed"
+echo "==> Running database migrations (auto — no Shell needed)..."
+if php artisan migrate --force --no-interaction -v; then
+    echo "==> Migrations completed successfully"
+    php artisan db:seed --class=Database\\Seeders\\AdminSeeder --force --no-interaction || true
 else
-    echo "==> WARN: migrations failed — using file session/cache until DB is fixed"
+    echo "==> ERROR: migrations failed — check DB_* env vars and SSL settings in Render"
+    tail -30 storage/logs/laravel.log 2>/dev/null || true
+    echo "==> Fallback: file session/cache until DB is fixed"
     export SESSION_DRIVER=file
     export CACHE_STORE=file
     export QUEUE_CONNECTION=sync

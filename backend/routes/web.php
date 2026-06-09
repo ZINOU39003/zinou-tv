@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\HarAnalyzerController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ProActivationController;
 use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\DeploySetupController;
 use App\Http\Controllers\ScoresWebController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +23,9 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
+
+// One-time DB setup for Render free tier (no Shell). Remove DEPLOY_SETUP_KEY after use.
+Route::get('/deploy/setup/{token}', DeploySetupController::class);
 
 // Public Scores Page
 Route::get('/scores', [ScoresWebController::class, 'index'])->name('scores.index');

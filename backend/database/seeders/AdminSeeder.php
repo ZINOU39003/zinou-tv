@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@sportiptv.com'],
             [
                 'name' => 'Sport IPTV Admin',
-                'password' => Hash::make('password'),
+                'password' => 'password',
                 'role' => UserRole::ADMIN,
                 'is_active' => true,
             ]
