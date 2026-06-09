@@ -9,7 +9,6 @@
 services:
   - type: web
     name: zinou-tv-api
-    runtime: php
     plan: free
     rootDir: backend
     buildCommand: |
