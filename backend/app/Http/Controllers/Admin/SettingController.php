@@ -74,7 +74,7 @@ class SettingController extends Controller
         $admobAppId = Setting::get('admob_app_id', 'ca-app-pub-3940256099942544~3347511713');
         $admobBannerId = Setting::get('admob_banner_ad_unit_id', 'ca-app-pub-3940256099942544/6300978111');
         $admobInterstitialId = Setting::get('admob_interstitial_ad_unit_id', 'ca-app-pub-3940256099942544/1033173712');
-        $adVideoUrl = Setting::get('ad_video_url', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4');
+        $adVideoUrl = Setting::get('ad_video_url', '');
         $streamTickerText = Setting::get('stream_ticker_text', '');
 
         return view('admin.settings.ads', compact(
@@ -96,7 +96,7 @@ class SettingController extends Controller
             'admob_app_id' => 'required|string',
             'admob_banner_ad_unit_id' => 'required|string',
             'admob_interstitial_ad_unit_id' => 'required|string',
-            'ad_video_url' => 'required|url',
+            'ad_video_url' => 'nullable|url|max:2048',
             'stream_ticker_text' => 'nullable|string|max:500',
         ]);
 
@@ -106,7 +106,7 @@ class SettingController extends Controller
         Setting::set('admob_app_id', $request->input('admob_app_id'));
         Setting::set('admob_banner_ad_unit_id', $request->input('admob_banner_ad_unit_id'));
         Setting::set('admob_interstitial_ad_unit_id', $request->input('admob_interstitial_ad_unit_id'));
-        Setting::set('ad_video_url', $request->input('ad_video_url'));
+        Setting::set('ad_video_url', $request->input('ad_video_url', ''));
         Setting::set('stream_ticker_text', $request->input('stream_ticker_text', ''));
 
         return redirect()->back()->with('success', 'تم تحديث إعدادات الإعلانات بنجاح.');

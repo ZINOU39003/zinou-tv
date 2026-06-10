@@ -47,13 +47,15 @@
         <hr class="divider">
 
         <div class="section-header">
-            <h2><span class="icon">📺</span> فيديو إعلاني + نص البث</h2>
+            <h2><span class="icon">📺</span> نص البث</h2>
         </div>
 
         <div class="form-group">
-            <label for="ad_video_url">رابط فيديو إعلاني (MP4)</label>
-            <input type="text" id="ad_video_url" name="ad_video_url" class="form-control"
-                   value="{{ old('ad_video_url', $adVideoUrl) }}" required style="font-family:monospace;font-size:13px;">
+            <label for="ad_video_url">رابط فيديو إعلاني (MP4) <span style="color:var(--text-muted);font-weight:400;">— اختياري</span></label>
+            <input type="url" id="ad_video_url" name="ad_video_url" class="form-control"
+                   value="{{ old('ad_video_url', $adVideoUrl) }}" style="font-family:monospace;font-size:13px;"
+                   placeholder="اتركه فارغاً إذا كنت تستخدم AdMob فقط">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">ليس مطلوباً — اتركه فارغاً لاستخدام إعلانات AdMob فقط</p>
         </div>
 
         <div class="form-group">

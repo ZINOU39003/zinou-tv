@@ -22,7 +22,7 @@ class ConfigController extends Controller
         $admobAppId = Setting::get('admob_app_id', 'ca-app-pub-3940256099942544~3347511713');
         $admobBannerId = Setting::get('admob_banner_ad_unit_id', 'ca-app-pub-3940256099942544/6300978111');
         $admobInterstitialId = Setting::get('admob_interstitial_ad_unit_id', 'ca-app-pub-3940256099942544/1033173712');
-        $adVideoUrl = Setting::get('ad_video_url', 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4');
+        $adVideoUrl = Setting::get('ad_video_url', '');
 
         $minAppVersion = Setting::get('min_app_version', '1.0.0');
         $forceUpdate = Setting::get('force_update', '0') === '1';
