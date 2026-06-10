@@ -22,6 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import android.view.WindowManager
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Modifier
@@ -225,7 +229,24 @@ fun VideoPlayer(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = remember(context) { context as? android.app.Activity }
+    val gestureScope = rememberCoroutineScope()
     val isArabic = remember { java.util.Locale.getDefault().language == "ar" }
+
+    DisposableEffect(Unit) {
+        activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    LaunchedEffect(channel.id) {
+        viewModel.sendViewHeartbeat(channel.id)
+        while (true) {
+            delay(30_000)
+            viewModel.sendViewHeartbeat(channel.id)
+        }
+    }
 
     val defaultHeaders = remember(channel.id) {
         val headers = mutableMapOf<String, String>()
@@ -303,8 +324,7 @@ fun VideoPlayer(
     val configState by viewModel.appConfigState.collectAsState()
 
     val adsEnabled = remember(configState) {
-        val configData = (configState as? Resource.Success)?.data
-        configData?.ads_enabled ?: true
+        (configState as? Resource.Success)?.data?.ads_enabled == true
     }
 
     val admobInterstitialAdUnitId = remember(configState) {
@@ -319,8 +339,6 @@ fun VideoPlayer(
     val isPremium = remember(channel.id) { viewModel.isPremiumUser() }
     var isAdPlaying by remember(channel.id, adsEnabled) { mutableStateOf(!isPremium && adsEnabled) }
     var isAdLoading by remember(channel.id, adsEnabled) { mutableStateOf(!isPremium && adsEnabled) }
-
-    val activity = remember(context) { context as? android.app.Activity }
 
     LaunchedEffect(channel.id, adsEnabled, admobInterstitialAdUnitId) {
         if (!isPremium && adsEnabled) {
@@ -426,7 +444,7 @@ fun VideoPlayer(
     var videoHeight by remember { mutableStateOf(720) }
 
     // Aspect ratio resize mode
-    var aspectRatioMode by remember { mutableStateOf(AspectRatioMode.FIT) }
+    var aspectRatioMode by remember { mutableStateOf(AspectRatioMode.STRETCH) }
 
     // Controls Overlays State
     var showControls by remember { mutableStateOf(true) }
@@ -436,24 +454,6 @@ fun VideoPlayer(
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     var drawerOpen by remember { mutableStateOf(false) }
-
-    var watermarkAlignment by remember { mutableStateOf(Alignment.BottomStart) }
-    var isWatermarkVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        val alignments = listOf(
-            Alignment.TopStart, Alignment.TopCenter, Alignment.TopEnd,
-            Alignment.CenterStart, Alignment.Center, Alignment.CenterEnd,
-            Alignment.BottomStart, Alignment.BottomCenter, Alignment.BottomEnd
-        )
-        while (true) {
-            watermarkAlignment = alignments.random()
-            isWatermarkVisible = true
-            kotlinx.coroutines.delay(8000) // Show for 8 seconds
-            isWatermarkVisible = false
-            kotlinx.coroutines.delay(52000) // Hide for 52 seconds
-        }
-    }
 
     // Drawer dynamic flows
     val categories by viewModel.drawerCategories.collectAsState()
@@ -1277,24 +1277,6 @@ fun VideoPlayer(
                 )
             }
 
-        // App Logo Watermark (Moving Anti-Piracy Watermark)
-        if (isWatermarkVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 60.dp, vertical = 60.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.zinou_tv_logo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .align(watermarkAlignment)
-                        .size(70.dp, 35.dp)
-                        .alpha(0.2f)
-                )
-            }
-        }
-
         // ── AdMob Interstitial Ad Loading Overlay ──
         if (isAdLoading) {
             Box(
@@ -1377,7 +1359,12 @@ fun VideoPlayer(
                                     activeDragBrightness = currentBrightness
                                     showControls = false
                                 },
-                                onDragEnd = { activeDragBrightness = null }
+                                onDragEnd = {
+                                    gestureScope.launch {
+                                        delay(1200)
+                                        activeDragBrightness = null
+                                    }
+                                }
                             )
                         }
                 )
@@ -1399,7 +1386,12 @@ fun VideoPlayer(
                                     activeDragVolume = currentVolume
                                     showControls = false
                                 },
-                                onDragEnd = { activeDragVolume = null }
+                                onDragEnd = {
+                                    gestureScope.launch {
+                                        delay(1200)
+                                        activeDragVolume = null
+                                    }
+                                }
                             )
                         }
                 )
@@ -2177,30 +2169,24 @@ fun VerticalSlider(
 fun WatermarkLogo(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .width(160.dp)
-            .height(55.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xCC070B14), // Thicker/darker glassmorphic navy base
-                        Color(0x990F0B18)
-                    )
-                ),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .border(
-                BorderStroke(1.5.dp, Color.White.copy(alpha = 0.25f)), // Stronger/brighter frosted glass border
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .size(36.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .background(Color.Black.copy(alpha = 0.5f))
+            .border(BorderStroke(1.dp, Primary.copy(alpha = 0.6f)), RoundedCornerShape(6.dp)),
         contentAlignment = Alignment.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.zinou_tv_logo),
-            contentDescription = "ZINOU TV Logo",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Fit
+        Icon(
+            imageVector = Icons.Default.Tv,
+            contentDescription = "ZINOU TV",
+            tint = Primary,
+            modifier = Modifier.size(22.dp)
+        )
+        Text(
+            text = "Z",
+            color = Color.White,
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.offset(y = 1.dp)
         )
     }
 }

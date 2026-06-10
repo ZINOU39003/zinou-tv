@@ -18,7 +18,7 @@ data class SubscriptionPackageDto(
 data class AppConfigDto(
     val whatsapp_number: String = "",
     val packages: List<SubscriptionPackageDto> = emptyList(),
-    val ads_enabled: Boolean = true,
+    val ads_enabled: Boolean = false,
     val admob_app_id: String = Constants.ADMOB_APP_ID,
     val admob_banner_ad_unit_id: String = Constants.ADMOB_BANNER_AD_UNIT_ID,
     val admob_interstitial_ad_unit_id: String = Constants.ADMOB_INTERSTITIAL_AD_UNIT_ID,

@@ -5,8 +5,6 @@
 @section('header_subtitle', 'نظرة عامة على أداء البث والإحصائيات والتحليلات المتقدمة')
 
 @section('content')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
     /* Premium 2026 styling tweaks for the homepage */
     .premium-hero-card {
@@ -278,11 +276,10 @@
             <span class="kpi-icon cyan">👥</span>
         </div>
         <div class="kpi-body">
-            <div class="kpi-value">{{ number_format($stats['total_users'] * 0.45) }}</div>
-            <div class="kpi-change up">↑ 12.4%</div>
+            <div class="kpi-value">{{ number_format($stats['live_viewers'] ?? 0) }}</div>
         </div>
         <div class="kpi-footer">
-            <span>نشطون الآن عبر الأجهزة</span>
+            <span>يشاهدون الآن (آخر دقيقتين)</span>
             <span class="live-dot" style="margin: 0 4px;"></span>
         </div>
     </div>
@@ -303,19 +300,18 @@
         </div>
     </div>
 
-    <!-- Bandwidth -->
+    <!-- Installs -->
     <div class="kpi-card amber">
         <div class="kpi-header">
-            <span class="kpi-title">استهلاك الباندويث الحالي</span>
-            <span class="kpi-icon amber">⚡</span>
+            <span class="kpi-title">التطبيقات المثبتة</span>
+            <span class="kpi-icon amber">📲</span>
         </div>
         <div class="kpi-body">
-            <div class="kpi-value">4.82 Gbps</div>
-            <div class="kpi-change up">↑ 8.2%</div>
+            <div class="kpi-value">{{ number_format($stats['total_installs'] ?? 0) }}</div>
         </div>
         <div class="kpi-footer">
-            <span>سعة الخادم القصوى</span>
-            <span style="font-family:monospace;">10.0 Gbps</span>
+            <span>نشط اليوم</span>
+            <span style="font-family:monospace;">{{ number_format($stats['active_devices_today'] ?? 0) }}</span>
         </div>
     </div>
 
@@ -369,98 +365,60 @@
 <div class="dashboard-section-grid">
     <!-- Left Column: IPTV Live Monitoring & Charts -->
     <div>
-        <!-- Monitoring Center -->
+        <!-- Live viewers by channel -->
         <div class="card" style="margin-bottom:24px;">
             <div class="section-header">
                 <h2>
                     <span class="icon" style="background:rgba(0, 240, 255, 0.1); border-color:rgba(0, 240, 255, 0.2); color:#00f0ff;">📡</span>
-                    مركز مراقبة البث الحي (IPTV Monitoring Center)
+                    المشاهدون الآن حسب القناة
                 </h2>
-                <span class="badge badge-success">● جميع السيرفرات متصلة</span>
+                <span class="badge badge-success">● {{ number_format($stats['live_viewers'] ?? 0) }} مشاهد</span>
             </div>
-            
-            <div style="margin-top:16px;">
-                <div class="monitoring-item">
-                    <div class="monitoring-channel">
-                        <span style="font-weight:800; color:#00f0ff; width:20px;">01</span>
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/BeIN_Sports_logo.svg" alt="" class="monitoring-logo">
-                        <div>
-                            <span style="font-weight:700; font-size:14px;">BEIN SPORTS 1 HD</span>
-                            <div style="font-size:10px; color:var(--text-muted);">HLS (m3u8) • Server 1 Primary</div>
-                        </div>
-                    </div>
-                    <div class="monitoring-metrics">
-                        <span>1080p @ 60fps</span>
-                        <span style="color:var(--success);">4.8 Mbps</span>
-                        <span style="color:#00f0ff;">18 ms</span>
-                    </div>
-                    <div class="monitoring-status">
-                        <span class="live-dot"></span>
-                        <span style="color:var(--success); font-weight:700;">مستقر</span>
-                    </div>
-                </div>
 
-                <div class="monitoring-item">
-                    <div class="monitoring-channel">
-                        <span style="font-weight:800; color:#00f0ff; width:20px;">02</span>
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/BeIN_Sports_logo.svg" alt="" class="monitoring-logo">
-                        <div>
-                            <span style="font-weight:700; font-size:14px;">BEIN SPORTS PREMIUM 1</span>
-                            <div style="font-size:10px; color:var(--text-muted);">MPEG-TS • Backup Server</div>
-                        </div>
-                    </div>
-                    <div class="monitoring-metrics">
-                        <span>1080p @ 50fps</span>
-                        <span style="color:var(--success);">5.2 Mbps</span>
-                        <span style="color:#00f0ff;">24 ms</span>
-                    </div>
-                    <div class="monitoring-status">
-                        <span class="live-dot"></span>
-                        <span style="color:var(--success); font-weight:700;">مستقر</span>
-                    </div>
-                </div>
-
-                <div class="monitoring-item">
-                    <div class="monitoring-channel">
-                        <span style="font-weight:800; color:#00f0ff; width:20px;">03</span>
-                        <div class="monitoring-logo" style="display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:#fff;">S</div>
-                        <div>
-                            <span style="font-weight:700; font-size:14px;">SSC SPORTS 1 HD</span>
-                            <div style="font-size:10px; color:var(--text-muted);">DASH (mpd) • Main Link</div>
-                        </div>
-                    </div>
-                    <div class="monitoring-metrics">
-                        <span>4K UltraHD</span>
-                        <span style="color:var(--success);">12.5 Mbps</span>
-                        <span style="color:#00f0ff;">12 ms</span>
-                    </div>
-                    <div class="monitoring-status">
-                        <span class="live-dot"></span>
-                        <span style="color:var(--success); font-weight:700;">ممتاز</span>
-                    </div>
-                </div>
-            </div>
+            <table class="table" style="margin-top:16px;">
+                <thead>
+                    <tr>
+                        <th>القناة</th>
+                        <th style="text-align:center;">المشاهدون</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($stats['viewers_by_channel'] ?? [] as $row)
+                        <tr>
+                            <td>{{ $row['channel_name'] ?? '—' }}</td>
+                            <td style="text-align:center;font-weight:800;color:var(--accent-primary);">{{ $row['viewers'] }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="2" class="text-center text-muted" style="padding:30px;">لا يوجد مشاهدون الآن</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
-        <!-- Advanced Charts -->
-        <div class="grid-2">
-            <div class="chart-card">
-                <div class="section-header">
-                    <h3 style="font-size:15px; font-weight:800;">📊 معدلات المشاهدة والذروة (Peak Hours)</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="peakHoursChart"></canvas>
-                </div>
+        <div class="card" style="margin-bottom:24px;">
+            <div class="section-header">
+                <h2><span class="icon">👁</span> تفاصيل المشاهدة الحية</h2>
             </div>
-
-            <div class="chart-card">
-                <div class="section-header">
-                    <h3 style="font-size:15px; font-weight:800;">📱 توزيع الأجهزة المتصلة (Devices)</h3>
-                </div>
-                <div class="chart-container">
-                    <canvas id="deviceChart"></canvas>
-                </div>
-            </div>
+            <table class="table" style="margin-top:16px;">
+                <thead>
+                    <tr>
+                        <th>القناة</th>
+                        <th>الجهاز</th>
+                        <th>آخر نشاط</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($stats['channel_viewers'] ?? [] as $viewer)
+                        <tr>
+                            <td>{{ $viewer['channel_name'] ?? '—' }}</td>
+                            <td style="font-size:12px;">{{ $viewer['device_name'] ?? 'جهاز' }}</td>
+                            <td style="font-size:12px;color:var(--text-muted);">{{ $viewer['last_seen'] ?? '—' }}</td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="3" class="text-center text-muted" style="padding:30px;">لا توجد جلسات مشاهدة نشطة</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -503,67 +461,4 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Chart 1: Peak Hours (Line Chart)
-        const ctxPeak = document.getElementById('peakHoursChart').getContext('2d');
-        new Chart(ctxPeak, {
-            type: 'line',
-            data: {
-                labels: ['12 PM', '3 PM', '6 PM', '9 PM', '12 AM', '3 AM', '6 AM', '9 AM'],
-                datasets: [{
-                    label: 'المشاهدون المتصلون',
-                    data: [180, 240, 480, 680, 520, 210, 95, 140],
-                    borderColor: '#00f0ff',
-                    backgroundColor: 'rgba(0, 240, 255, 0.05)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#00f0ff'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#7b90b8', font: { family: 'Cairo' } } },
-                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#7b90b8' } }
-                }
-            }
-        });
-
-        // Chart 2: Device Breakdown (Doughnut Chart)
-        const ctxDevice = document.getElementById('deviceChart').getContext('2d');
-        new Chart(ctxDevice, {
-            type: 'doughnut',
-            data: {
-                labels: ['Android TV', 'Smartphones', 'Apple TV', 'Web Player'],
-                datasets: [{
-                    data: [55, 25, 12, 8],
-                    backgroundColor: ['#00f0ff', '#10b981', '#f59e0b', '#ff4b72'],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            color: '#e8f0fe',
-                            font: { family: 'Cairo', size: 11 },
-                            padding: 15
-                        }
-                    }
-                },
-                cutout: '70%'
-            }
-        });
-    });
-</script>
 @endsection

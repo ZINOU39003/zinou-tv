@@ -1,8 +1,16 @@
 package com.sportiptv.app.ui.player
 
+import android.content.Context
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sportiptv.app.BuildConfig
+import com.sportiptv.app.data.remote.api.SportApi
+import com.sportiptv.app.data.remote.dto.HeartbeatRequest
 import com.sportiptv.app.domain.repository.AuthRepository
+import com.sportiptv.app.util.DeviceUtils
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import com.sportiptv.app.domain.model.Category
 import com.sportiptv.app.domain.model.Channel
 import com.sportiptv.app.domain.model.Resource
@@ -19,7 +27,9 @@ class PlayerViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val authRepository: AuthRepository,
-    private val subscriptionRepository: SubscriptionRepository
+    private val subscriptionRepository: SubscriptionRepository,
+    private val sportApi: SportApi,
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     fun isPremiumUser(): Boolean = authRepository.isUserLoggedIn()
@@ -163,6 +173,22 @@ class PlayerViewModel @Inject constructor(
             if (currentIdx != -1) {
                 val nextIdx = (currentIdx + 1) % siblings.size
                 loadChannel(siblings[nextIdx].id)
+            }
+        }
+    }
+
+    fun sendViewHeartbeat(channelId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                sportApi.sendHeartbeat(
+                    HeartbeatRequest(
+                        device_id = DeviceUtils.getDeviceId(context),
+                        channel_id = channelId,
+                        device_name = Build.MODEL,
+                        app_version = BuildConfig.VERSION_NAME,
+                    )
+                )
+            } catch (_: Exception) {
             }
         }
     }

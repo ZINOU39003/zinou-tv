@@ -23,6 +23,11 @@ interface SportApi {
     @GET("config")
     suspend fun getAppConfig(): Response<ApiResponse<AppConfigDto>>
 
+    @POST("analytics/heartbeat")
+    suspend fun sendHeartbeat(
+        @Body request: HeartbeatRequest
+    ): Response<ApiResponse<Unit?>>
+
     @POST("license/activate")
     suspend fun activateLicense(
         @Body request: ActivateRequest

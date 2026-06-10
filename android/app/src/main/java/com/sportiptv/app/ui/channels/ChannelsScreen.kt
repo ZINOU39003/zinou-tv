@@ -71,6 +71,10 @@ fun ChannelsScreen(
     val syncState by viewModel.syncState.collectAsState()
     val configState by viewModel.appConfigState.collectAsState()
 
+    val adsEnabled = remember(configState) {
+        (configState as? Resource.Success)?.data?.ads_enabled == true
+    }
+
     val bannerAdUnitId = remember(configState) {
         (configState as? Resource.Success)?.data?.admob_banner_ad_unit_id
             ?: Constants.ADMOB_BANNER_AD_UNIT_ID
@@ -174,8 +178,9 @@ fun ChannelsScreen(
                 if (categories.isEmpty()) {
                     EmptyState(emptyMsg, isArabic, syncState is Resource.Error) { viewModel.retrySync() }
                 } else {
-                    val gridEntries = remember(categories) {
-                        buildGridWithAd(categories) { GridEntry.CategoryItem(it) }
+                    val gridEntries = remember(categories, adsEnabled) {
+                        if (adsEnabled) buildGridWithAd(categories) { GridEntry.CategoryItem(it) }
+                        else categories.map { GridEntry.CategoryItem(it) }
                     }
                     NetworkPackageGrid(
                         entries = gridEntries,
@@ -191,8 +196,9 @@ fun ChannelsScreen(
                 EmptyState(emptyMsg, isArabic, showRetry = true) { viewModel.retrySync() }
             }
             else -> {
-                val gridEntries = remember(packages) {
-                    buildGridWithAd(packages) { GridEntry.PackageItem(it) }
+                val gridEntries = remember(packages, adsEnabled) {
+                    if (adsEnabled) buildGridWithAd(packages) { GridEntry.PackageItem(it) }
+                    else packages.map { GridEntry.PackageItem(it) }
                 }
                 NetworkPackageGrid(
                     entries = gridEntries,
@@ -205,8 +211,10 @@ fun ChannelsScreen(
             }
         }
 
-        Box(modifier = Modifier.fillMaxWidth().background(BgPrimary)) {
-            AdBanner(adUnitId = bannerAdUnitId)
+        if (adsEnabled) {
+            Box(modifier = Modifier.fillMaxWidth().background(BgPrimary)) {
+                AdBanner(adUnitId = bannerAdUnitId)
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ Route::middleware(['api.key', 'security.headers'])->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/license/activate', [LicenseController::class, 'activate']);
     Route::get('/config', [\App\Http\Controllers\Api\ConfigController::class, 'index']);
+    Route::post('/analytics/heartbeat', [\App\Http\Controllers\Api\AnalyticsController::class, 'heartbeat']);
 
     // Protected user routes (requires JWT Token, kept for compatibility)
     Route::middleware('auth:api')->group(function () {
