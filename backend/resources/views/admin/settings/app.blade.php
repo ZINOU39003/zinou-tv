@@ -2,12 +2,12 @@
 
 @section('title', 'إعدادات التطبيق')
 @section('header_title', 'إعدادات التطبيق')
-@section('header_subtitle', 'رفع APK، إجبار التحديث، وإدارة النسخ')
+@section('header_subtitle', 'رابط التحديث، إجبار النسخة، وإدارة التطبيق')
 
 @section('content')
 
 <div class="card" style="max-width: 750px; margin: 0 auto;">
-    <form action="{{ route('admin.settings.app.update') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.settings.app.update') }}" method="POST">
         @csrf
 
         <div class="section-header">
@@ -17,8 +17,8 @@
         <div class="form-group">
             <label for="latest_app_version">رقم النسخة الحالية (Latest Version)</label>
             <input type="text" id="latest_app_version" name="latest_app_version" class="form-control"
-                   value="{{ old('latest_app_version', $latestAppVersion) }}" required placeholder="1.0.1">
-            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">النسخة المتوفرة للتحميل بعد رفع APK</p>
+                   value="{{ old('latest_app_version', $latestAppVersion) }}" required placeholder="1.1.0">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">النسخة المتوفرة للتحميل</p>
         </div>
 
         <div class="form-group">
@@ -45,12 +45,17 @@
         </div>
 
         <div class="form-group">
-            <label for="apk_file">رفع ملف APK جديد</label>
-            <input type="file" id="apk_file" name="apk_file" class="form-control" accept=".apk">
-            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">الحد الأقصى 100 MB — حجم APK التطبيق ~30 MB</p>
+            <label for="latest_apk_url">رابط تحميل APK</label>
+            <input type="url" id="latest_apk_url" name="latest_apk_url" class="form-control"
+                   value="{{ old('latest_apk_url', $latestApkUrl) }}"
+                   placeholder="https://example.com/ZINOU-TV-v1.1.0.apk"
+                   style="font-family:monospace;font-size:13px;">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                الصق رابط مباشر من Google Drive أو MediaFire أو أي استضافة
+            </p>
             @if($latestApkUrl)
                 <p style="font-size:11px;color:var(--accent-secondary);margin-top:8px;">
-                    ✓ رابط التحميل الحالي:
+                    ✓ الرابط الحالي:
                     <a href="{{ $latestApkUrl }}" target="_blank" style="color:var(--accent-secondary);word-break:break-all;">{{ $latestApkUrl }}</a>
                 </p>
             @endif

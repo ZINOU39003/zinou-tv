@@ -129,20 +129,7 @@ class SettingController extends Controller
             'min_app_version' => 'required|string|max:20',
             'latest_app_version' => 'required|string|max:20',
             'update_message' => 'nullable|string|max:500',
-            'apk_file' => [
-                'nullable',
-                'file',
-                'max:102400',
-                function (string $attribute, $value, \Closure $fail) {
-                    if (! $value instanceof \Illuminate\Http\UploadedFile) {
-                        return;
-                    }
-                    $ext = strtolower($value->getClientOriginalExtension());
-                    if ($ext !== 'apk') {
-                        $fail('يجب أن يكون الملف بامتداد .apk');
-                    }
-                },
-            ],
+            'latest_apk_url' => 'nullable|url|max:2048',
         ]);
 
         Setting::set('min_app_version', $request->input('min_app_version'));
@@ -150,11 +137,8 @@ class SettingController extends Controller
         Setting::set('update_message', $request->input('update_message', ''));
         Setting::set('force_update', $request->has('force_update') ? '1' : '0');
 
-        if ($request->hasFile('apk_file')) {
-            $file = $request->file('apk_file');
-            $filename = 'zinou-tv-'.time().'.apk';
-            $path = $file->storeAs('apks', $filename, 'public');
-            Setting::set('latest_apk_url', asset('storage/'.$path));
+        if ($request->filled('latest_apk_url')) {
+            Setting::set('latest_apk_url', $request->input('latest_apk_url'));
         }
 
         return redirect()->back()->with('success', 'تم تحديث إعدادات التطبيق بنجاح.');
