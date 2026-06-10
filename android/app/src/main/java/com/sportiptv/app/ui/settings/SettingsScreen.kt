@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -24,11 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.sportiptv.app.ui.theme.BgPrimary
-import com.sportiptv.app.ui.theme.BgSecondary
-import com.sportiptv.app.ui.theme.DangerColor
-import com.sportiptv.app.ui.theme.Primary
-import com.sportiptv.app.ui.theme.TextMuted
+import com.sportiptv.app.ui.theme.*
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -39,6 +36,9 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var showLogoutDialog by remember { mutableStateOf(false) }
+    val versionName = remember {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+    }
 
     LaunchedEffect(key1 = true) {
         viewModel.eventFlow.collectLatest { event ->
@@ -54,21 +54,16 @@ fun SettingsScreen(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
-            title = { Text("Log Out") },
-            text = { Text("Are you sure you want to log out? This will clear your credentials on this device.") },
+            title = { Text("تسجيل الخروج", fontWeight = FontWeight.Bold) },
+            text = { Text("هل أنت متأكد؟ سيتم مسح بيانات الدخول من هذا الجهاز.") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        showLogoutDialog = false
-                        viewModel.logout()
-                    }
-                ) {
-                    Text("LOG OUT", color = DangerColor, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { showLogoutDialog = false; viewModel.logout() }) {
+                    Text("خروج", color = DangerColor, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLogoutDialog = false }) {
-                    Text("CANCEL", color = Color.White)
+                    Text("إلغاء", color = Color.White)
                 }
             },
             containerColor = BgSecondary
@@ -78,93 +73,72 @@ fun SettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPrimary)
+            .background(
+                Brush.verticalGradient(listOf(BgPrimary, Color(0xFF0D1225)))
+            )
     ) {
-        // Title Header
-        Text(
-            text = "Settings",
-            color = Color.White,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp)
-        )
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text("الإعدادات", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text("إدارة حسابك وتفضيلات التطبيق", color = TextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+        }
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 20.dp)
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            // Subscription Info Row
             item {
                 SettingsRowItem(
-                    title = "Subscription Info",
-                    subtitle = "Verify expiry date and code plan duration",
+                    title = "معلومات الاشتراك",
+                    subtitle = "تحقق من تاريخ الانتهاء والباقة",
                     icon = Icons.Default.Star,
                     iconColor = Primary,
                     onClick = onNavigateToSubscription
                 )
             }
-
-            // Database cache clearing
             item {
                 SettingsRowItem(
-                    title = "Wipe Database Cache",
-                    subtitle = "Reload and refresh categories list manually",
+                    title = "تحديث القنوات",
+                    subtitle = "مسح الذاكرة المؤقتة وإعادة تحميل البيانات",
                     icon = Icons.Default.LockReset,
                     iconColor = Color(0xFF3B82F6),
                     onClick = { viewModel.clearCache() }
                 )
             }
-
-            // Device signature
             item {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            androidx.compose.foundation.BorderStroke(0.5.dp, Color(0x22FFFFFF)),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    colors = CardDefaults.cardColors(containerColor = BgSecondary)
+                    modifier = Modifier.fillMaxWidth().border(
+                        androidx.compose.foundation.BorderStroke(0.5.dp, GlassBorder),
+                        RoundedCornerShape(14.dp)
+                    ),
+                    colors = CardDefaults.cardColors(containerColor = BgSecondary.copy(alpha = 0.9f)),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Device Lock Signature",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Column(modifier = Modifier.padding(18.dp)) {
+                        Text("معرّف الجهاز", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         Text(
                             text = viewModel.getDeviceIdSignature(),
-                            color = TextMuted,
-                            fontSize = 11.sp,
+                            color = Primary,
+                            fontSize = 12.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                            modifier = Modifier.padding(top = 4.dp)
+                            modifier = Modifier.padding(top = 6.dp)
                         )
                     }
                 }
             }
-
-            // About details
             item {
                 SettingsRowItem(
-                    title = "About ZINOU Tv",
-                    subtitle = "v1.0.0 — Production Ready Native Client",
+                    title = "حول ZINOU TV",
+                    subtitle = "الإصدار $versionName — تطبيق IPTV احترافي",
                     icon = Icons.Default.Info,
-                    iconColor = Color.LightGray,
+                    iconColor = Color(0xFF94A3B8),
                     onClick = {}
                 )
             }
-
-            // Logout row
             item {
                 SettingsRowItem(
-                    title = "Log Out",
-                    subtitle = "Sign out from this device profile",
+                    title = "تسجيل الخروج",
+                    subtitle = "الخروج من الحساب على هذا الجهاز",
                     icon = Icons.Default.Logout,
                     iconColor = DangerColor,
                     onClick = { showLogoutDialog = true }
@@ -186,49 +160,25 @@ fun SettingsRowItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .border(
-                androidx.compose.foundation.BorderStroke(0.5.dp, Color(0x22FFFFFF)),
-                shape = RoundedCornerShape(10.dp)
-            )
+            .clip(RoundedCornerShape(14.dp))
+            .border(androidx.compose.foundation.BorderStroke(0.5.dp, GlassBorder), RoundedCornerShape(14.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = BgSecondary)
+        colors = CardDefaults.cardColors(containerColor = BgSecondary.copy(alpha = 0.85f)),
+        shape = RoundedCornerShape(14.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(iconColor.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp)),
+                    .size(44.dp)
+                    .background(iconColor.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = title,
-                    tint = iconColor,
-                    modifier = Modifier.size(20.dp)
-                )
+                Icon(imageVector = icon, contentDescription = title, tint = iconColor, modifier = Modifier.size(22.dp))
             }
-            
             Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = title,
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = subtitle,
-                    color = TextMuted,
-                    fontSize = 11.sp,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(text = subtitle, color = TextMuted, fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp))
             }
         }
     }

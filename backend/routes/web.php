@@ -153,7 +153,10 @@ Route::middleware(['web', 'auth', 'admin', 'security.headers'])->prefix('admin')
 
     // Ads Settings
     Route::get('/settings/ads', [SettingController::class, 'ads'])->name('settings.ads');
-    Route::post('/settings/settings/ads', [SettingController::class, 'updateAds'])->name('settings.ads.update');
+    Route::post('/settings/ads', [SettingController::class, 'updateAds'])->name('settings.ads.update');
+
+    Route::get('/settings/app', [SettingController::class, 'app'])->name('settings.app');
+    Route::post('/settings/app', [SettingController::class, 'updateApp'])->name('settings.app.update');
 
     // PRO Activation
     Route::get('/pro-activation', [ProActivationController::class, 'index'])->name('pro-activation.index');

@@ -6,6 +6,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -17,6 +18,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.sportiptv.app.domain.model.Resource
+import com.sportiptv.app.ui.components.ForceUpdateScreen
+import com.sportiptv.app.ui.config.AppConfigViewModel
+import com.sportiptv.app.util.VersionUtils
 import com.sportiptv.app.ui.auth.ActivationScreen
 import com.sportiptv.app.ui.auth.LoginScreen
 import com.sportiptv.app.ui.channels.ChannelsScreen
@@ -40,6 +48,25 @@ fun NavGraph(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val configViewModel: AppConfigViewModel = hiltViewModel()
+    val configState by configViewModel.configState.collectAsState()
+    val context = LocalContext.current
+    val versionName = remember {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+    }
+    val configData = (configState as? Resource.Success)?.data
+    val needsForceUpdate = configData?.force_update == true &&
+        configData.min_app_version.isNotBlank() &&
+        VersionUtils.isLowerThan(versionName, configData.min_app_version)
+
+    if (needsForceUpdate && currentRoute != Screen.Splash.route && currentRoute != Screen.Login.route) {
+        ForceUpdateScreen(
+            message = configData?.update_message ?: "",
+            downloadUrl = configData?.latest_apk_url ?: ""
+        )
+        return
+    }
 
     // Toggle Bottom Bar / Sidebar. Hidden on Splash, Login, Activation, and Player screens
     val showBottomBar = currentRoute in listOf(
@@ -194,6 +221,12 @@ fun NavGraph(
                         initialCategoryId = categoryId,
                         onChannelClick = { channelId ->
                             navController.navigate(Screen.Player.createRoute(channelId))
+                        },
+                        onNavigateHome = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }

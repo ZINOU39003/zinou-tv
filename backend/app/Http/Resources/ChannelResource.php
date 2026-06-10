@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use App\Services\EncryptionService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -80,7 +81,7 @@ class ChannelResource extends JsonResource
             'package_id' => $this->package_id,
             'package_name' => $this->package ? $this->package->name : null,
             'package_name_ar' => $this->package ? $this->package->name_ar : null,
-            'logo_url' => $this->logo_url,
+            'logo_url' => MediaUrl::resolve($this->logo_url),
             'stream_url' => $getProxiedUrl($this->id, $this->stream_url),
             'stream_type' => $this->stream_type->value ?? $this->stream_type,
             'quality' => $this->quality->value ?? $this->quality,

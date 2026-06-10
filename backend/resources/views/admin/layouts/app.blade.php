@@ -982,6 +982,14 @@
                     إدارة الإعلانات
                 </a>
             </li>
+            <li class="{{ Request::is('admin/settings/app*') ? 'active' : '' }}">
+                <a href="{{ route('admin.settings.app') }}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm-5 20c-.83 0-1.5-.67-1.5-1.5S11.17 18 12 18s1.5.67 1.5 1.5S12.83 21 12 21zm5-4H7V4h10v13z"/></svg>
+                    </span>
+                    إعدادات التطبيق
+                </a>
+            </li>
         </ul>
 
         <div class="sidebar-footer">

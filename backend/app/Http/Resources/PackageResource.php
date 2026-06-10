@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\MediaUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,7 @@ class PackageResource extends JsonResource
             'name' => $this->name,
             'name_ar' => $this->name_ar,
             'slug' => $this->slug,
-            'logo_url' => $this->logo_url,
+            'logo_url' => MediaUrl::resolve($this->logo_url),
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
             'channels_count' => $this->channels_count ?? $this->channels()->where('is_active', true)->count(),

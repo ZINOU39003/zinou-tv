@@ -7,6 +7,7 @@ import com.sportiptv.app.domain.model.Channel
 import com.sportiptv.app.domain.model.Resource
 import com.sportiptv.app.domain.repository.ChannelRepository
 import com.sportiptv.app.domain.model.Package
+import com.sportiptv.app.domain.repository.SubscriptionRepository
 import com.sportiptv.app.domain.usecase.GetCategoriesUseCase
 import com.sportiptv.app.domain.usecase.GetPackagesUseCase
 import com.sportiptv.app.domain.usecase.GetChannelsUseCase
@@ -23,8 +24,12 @@ class ChannelsViewModel @Inject constructor(
     private val getChannelsUseCase: GetChannelsUseCase,
     private val getPackagesUseCase: GetPackagesUseCase,
     private val getCategoriesUseCase: GetCategoriesUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    private val subscriptionRepository: SubscriptionRepository
 ) : ViewModel() {
+
+    private val _appConfigState = MutableStateFlow<Resource<com.sportiptv.app.data.remote.dto.AppConfigDto>>(Resource.Idle)
+    val appConfigState: StateFlow<Resource<com.sportiptv.app.data.remote.dto.AppConfigDto>> = _appConfigState.asStateFlow()
 
     private val _syncState = MutableStateFlow<Resource<Unit>>(Resource.Idle)
     val syncState: StateFlow<Resource<Unit>> = _syncState.asStateFlow()
@@ -59,6 +64,13 @@ class ChannelsViewModel @Inject constructor(
 
     init {
         syncContent()
+        loadAppConfig()
+    }
+
+    private fun loadAppConfig() {
+        viewModelScope.launch {
+            subscriptionRepository.getAppConfig().collect { _appConfigState.value = it }
+        }
     }
 
     fun syncContent() {

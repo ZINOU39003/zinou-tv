@@ -55,6 +55,7 @@ import com.sportiptv.app.R
 import com.sportiptv.app.domain.model.Channel
 import com.sportiptv.app.domain.model.ChannelServer
 import com.sportiptv.app.domain.model.Resource
+import com.sportiptv.app.ui.components.StreamTickerBar
 import com.sportiptv.app.ui.components.ErrorView
 import com.sportiptv.app.ui.components.LoadingIndicator
 import com.sportiptv.app.ui.theme.*
@@ -309,6 +310,10 @@ fun VideoPlayer(
     val admobInterstitialAdUnitId = remember(configState) {
         val configData = (configState as? Resource.Success)?.data
         configData?.admob_interstitial_ad_unit_id ?: com.sportiptv.app.util.Constants.ADMOB_INTERSTITIAL_AD_UNIT_ID
+    }
+
+    val streamTickerText = remember(configState) {
+        (configState as? Resource.Success)?.data?.stream_ticker_text?.takeIf { it.isNotBlank() } ?: ""
     }
 
     val isPremium = remember(channel.id) { viewModel.isPremiumUser() }
@@ -1023,6 +1028,13 @@ fun VideoPlayer(
                             .padding(top = 12.dp, end = 12.dp)
                     )
 
+                    if (streamTickerText.isNotBlank()) {
+                        StreamTickerBar(
+                            text = streamTickerText,
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        )
+                    }
+
                     // Chevron overlay button on left edge to go full-screen or toggle drawer
                     IconButton(
                         onClick = { drawerOpen = false },
@@ -1257,6 +1269,13 @@ fun VideoPlayer(
                     .align(AbsoluteAlignment.TopRight)
                     .padding(top = 12.dp, end = 12.dp)
             )
+
+            if (streamTickerText.isNotBlank()) {
+                StreamTickerBar(
+                    text = streamTickerText,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
 
         // App Logo Watermark (Moving Anti-Piracy Watermark)
         if (isWatermarkVisible) {

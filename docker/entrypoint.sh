@@ -29,8 +29,8 @@ if php artisan migrate --force --no-interaction -v; then
 else
     echo "==> ERROR: migrations failed — check DB_* env vars and SSL settings in Render"
     tail -30 storage/logs/laravel.log 2>/dev/null || true
-    echo "==> Fallback: file session/cache until DB is fixed"
-    export SESSION_DRIVER=file
+    echo "==> Fallback: cookie session until DB is fixed (avoids 419 on Render)"
+    export SESSION_DRIVER=cookie
     export CACHE_STORE=file
     export QUEUE_CONNECTION=sync
     php artisan config:clear

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sportiptv.app.util.ImageUrlResolver
 import coil3.compose.AsyncImage
 import com.sportiptv.app.domain.model.Channel
 import com.sportiptv.app.ui.theme.*
@@ -96,15 +97,25 @@ fun ChannelCard(
                     .height(110.dp)
                     .background(Color(0xFF0F1222))
             ) {
-                // Async image for logo
-                AsyncImage(
-                    model = channel.logoUrl,
-                    contentDescription = channel.name,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp)
-                )
+                val logoModel = ImageUrlResolver.resolve(channel.logoUrl)
+                if (!logoModel.isNullOrBlank()) {
+                    AsyncImage(
+                        model = logoModel,
+                        contentDescription = channel.name,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(12.dp)
+                    )
+                } else {
+                    Text(
+                        text = channel.name.take(2).uppercase(),
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
                 // Quality Badge (e.g. FHD, HD)
                 Box(

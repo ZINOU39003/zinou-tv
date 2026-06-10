@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +26,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sportiptv.app.util.Constants
 import coil3.compose.AsyncImage
+import com.sportiptv.app.util.ImageUrlResolver
 import com.sportiptv.app.domain.model.Category
 import com.sportiptv.app.domain.model.Package
 import com.sportiptv.app.domain.model.Resource
@@ -53,6 +56,7 @@ private fun <T> buildGridWithAd(items: List<T>, mapItem: (T) -> GridEntry): List
 fun ChannelsScreen(
     initialCategoryId: Long? = null,
     onChannelClick: (Long) -> Unit,
+    onNavigateHome: () -> Unit = {},
     viewModel: ChannelsViewModel = hiltViewModel()
 ) {
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
@@ -65,16 +69,16 @@ fun ChannelsScreen(
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
     val selectedPackageId by viewModel.selectedPackageId.collectAsState()
     val syncState by viewModel.syncState.collectAsState()
+    val configState by viewModel.appConfigState.collectAsState()
+
+    val bannerAdUnitId = remember(configState) {
+        (configState as? Resource.Success)?.data?.admob_banner_ad_unit_id
+            ?: Constants.ADMOB_BANNER_AD_UNIT_ID
+    }
 
     LaunchedEffect(initialCategoryId) {
         if (initialCategoryId != null) {
             viewModel.selectCategory(initialCategoryId)
-        }
-    }
-
-    LaunchedEffect(selectedCategoryId, packages) {
-        if (selectedCategoryId != null && selectedPackageId == null && packages.size == 1) {
-            viewModel.selectPackage(packages.first().id)
         }
     }
 
@@ -92,13 +96,23 @@ fun ChannelsScreen(
             .background(BgPrimary)
     ) {
         if (selectedCategoryId == null) {
-            Text(
-                text = networksTitleText,
-                color = Color.White,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 8.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = networksTitleText,
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onNavigateHome) {
+                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Primary)
+                }
+            }
         } else {
             Row(
                 modifier = Modifier
@@ -134,8 +148,15 @@ fun ChannelsScreen(
                     text = if (selectedPackageId != null) "$catName - $pkgName" else catName,
                     color = Primary,
                     fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+
+                IconButton(onClick = onNavigateHome) {
+                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Primary, modifier = Modifier.size(22.dp))
+                }
             }
         }
 
@@ -160,6 +181,7 @@ fun ChannelsScreen(
                         entries = gridEntries,
                         columnsCount = columnsCount,
                         isArabic = isArabic,
+                        bannerAdUnitId = bannerAdUnitId,
                         onCategoryClick = { viewModel.selectCategory(it) },
                         onPackageClick = { viewModel.selectPackage(it) }
                     )
@@ -176,6 +198,7 @@ fun ChannelsScreen(
                     entries = gridEntries,
                     columnsCount = columnsCount,
                     isArabic = isArabic,
+                    bannerAdUnitId = bannerAdUnitId,
                     onCategoryClick = { viewModel.selectCategory(it) },
                     onPackageClick = { viewModel.selectPackage(it) }
                 )
@@ -183,7 +206,7 @@ fun ChannelsScreen(
         }
 
         Box(modifier = Modifier.fillMaxWidth().background(BgPrimary)) {
-            AdBanner()
+            AdBanner(adUnitId = bannerAdUnitId)
         }
     }
 }
@@ -217,6 +240,7 @@ private fun ColumnScope.NetworkPackageGrid(
     entries: List<GridEntry>,
     columnsCount: Int,
     isArabic: Boolean,
+    bannerAdUnitId: String,
     onCategoryClick: (Long) -> Unit,
     onPackageClick: (Long) -> Unit
 ) {
@@ -235,7 +259,7 @@ private fun ColumnScope.NetworkPackageGrid(
             }
         }) { entry ->
             when (entry) {
-                GridEntry.AdSlot -> GridAdBanner()
+                GridEntry.AdSlot -> GridAdBanner(adUnitId = bannerAdUnitId)
                 is GridEntry.PackageItem -> NetworkOrPackageCard(
                     id = entry.pkg.id.toString(),
                     name = if (isArabic) entry.pkg.nameAr ?: entry.pkg.name else entry.pkg.name,
@@ -293,9 +317,10 @@ fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () 
                     modifier = Modifier.weight(1f).fillMaxWidth(0.85f),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (logoUrl.isNotEmpty()) {
+                    val resolvedUrl = ImageUrlResolver.resolve(logoUrl)
+                    if (!resolvedUrl.isNullOrBlank()) {
                         AsyncImage(
-                            model = logoUrl,
+                            model = resolvedUrl,
                             contentDescription = null,
                             modifier = Modifier.fillMaxSize().padding(4.dp),
                             contentScale = ContentScale.Fit
@@ -365,7 +390,7 @@ fun EmptyState(
 }
 
 @Composable
-fun GridAdBanner() {
+fun GridAdBanner(adUnitId: String) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
@@ -381,7 +406,7 @@ fun GridAdBanner() {
             factory = { context ->
                 com.google.android.gms.ads.AdView(context).apply {
                     setAdSize(com.google.android.gms.ads.AdSize(widthPx, heightPx))
-                    adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                    this.adUnitId = adUnitId
                     loadAd(com.google.android.gms.ads.AdRequest.Builder().build())
                 }
             }
@@ -390,13 +415,13 @@ fun GridAdBanner() {
 }
 
 @Composable
-fun AdBanner(modifier: Modifier = Modifier) {
+fun AdBanner(adUnitId: String, modifier: Modifier = Modifier) {
     androidx.compose.ui.viewinterop.AndroidView(
         modifier = modifier.fillMaxWidth(),
         factory = { context ->
             com.google.android.gms.ads.AdView(context).apply {
                 setAdSize(com.google.android.gms.ads.AdSize.BANNER)
-                adUnitId = "ca-app-pub-3940256099942544/6300978111"
+                this.adUnitId = adUnitId
                 loadAd(com.google.android.gms.ads.AdRequest.Builder().build())
             }
         }

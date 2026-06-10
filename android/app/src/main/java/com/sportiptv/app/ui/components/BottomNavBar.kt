@@ -25,12 +25,13 @@ fun BottomNavBar(
     currentRoute: String?,
     onNavigate: (String) -> Unit
 ) {
+    val isArabic = java.util.Locale.getDefault().language == "ar"
     val items = listOf(
-        NavigationItem("Home", Screen.Home.route, Icons.Default.Home),
-        NavigationItem("Channels", Screen.Channels.route, Icons.Default.List),
-        NavigationItem("Matches", Screen.Matches.route, Icons.Default.SportsSoccer),
-        NavigationItem("Favorites", Screen.Favorites.route, Icons.Default.Favorite),
-        NavigationItem("Settings", Screen.Settings.route, Icons.Default.Settings)
+        NavigationItem(if (isArabic) "الرئيسية" else "Home", Screen.Home.route, Icons.Default.Home),
+        NavigationItem(if (isArabic) "القنوات" else "Channels", Screen.Channels.route, Icons.Default.List),
+        NavigationItem(if (isArabic) "المباريات" else "Matches", Screen.Matches.route, Icons.Default.SportsSoccer),
+        NavigationItem(if (isArabic) "المفضلة" else "Favorites", Screen.Favorites.route, Icons.Default.Favorite),
+        NavigationItem(if (isArabic) "الإعدادات" else "Settings", Screen.Settings.route, Icons.Default.Settings)
     )
 
     NavigationBar(
