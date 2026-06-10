@@ -47,6 +47,7 @@
         <div class="form-group">
             <label for="apk_file">رفع ملف APK جديد</label>
             <input type="file" id="apk_file" name="apk_file" class="form-control" accept=".apk">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">الحد الأقصى 100 MB — حجم APK التطبيق ~30 MB</p>
             @if($latestApkUrl)
                 <p style="font-size:11px;color:var(--accent-secondary);margin-top:8px;">
                     ✓ رابط التحميل الحالي:
