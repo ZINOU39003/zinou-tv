@@ -225,19 +225,21 @@ class ChannelDataSyncService
 
         $relinked = 0;
         if ($worldCup && $package) {
-            $legacySlugs = ['bein-sports-max', 'world-cup-2026'];
+            $legacySlugs = ['bein-sports-max', 'zinou'];
             $legacyCategoryIds = Category::whereIn('slug', $legacySlugs)->pluck('id');
 
-            $relinked = Channel::query()
+            $channelIds = Channel::query()
                 ->where(function ($q) use ($legacyCategoryIds) {
                     $q->where('name', 'like', '%beIN Sports Max%')
                         ->orWhere('name', 'like', '%Sports Max%')
                         ->orWhereIn('category_id', $legacyCategoryIds);
                 })
-                ->update([
-                    'category_id' => $worldCup->id,
-                    'package_id' => $package->id,
-                ]);
+                ->pluck('id');
+
+            $relinked = Channel::whereIn('id', $channelIds)->update([
+                'category_id' => $worldCup->id,
+                'package_id' => $package->id,
+            ]);
         }
 
         $stats['relinked_world_cup_channels'] = $relinked;

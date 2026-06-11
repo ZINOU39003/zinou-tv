@@ -13,12 +13,6 @@ class RestoreRenderLegacy extends Command
 
     public function handle(ChannelDataSyncService $sync): int
     {
-        $this->info('Restoring Render legacy network structure...');
-        $stats = $sync->restoreRenderLegacyStructure();
-
-        $this->line("  Networks/packages: {$stats['categories']} categories, {$stats['packages']} packages");
-        $this->line("  Relinked World Cup channels: {$stats['relinked_world_cup_channels']}");
-
         if ($this->option('merge-local')) {
             $path = base_path('database/data/channel-data-export.json');
             if (file_exists($path)) {
@@ -27,6 +21,12 @@ class RestoreRenderLegacy extends Command
                 $this->line("  Merged channels: {$merge['channels']}, skipped: {$merge['skipped']}");
             }
         }
+
+        $this->info('Restoring Render legacy network structure...');
+        $stats = $sync->restoreRenderLegacyStructure();
+
+        $this->line("  Networks/packages: {$stats['categories']} categories, {$stats['packages']} packages");
+        $this->line("  Relinked World Cup channels: {$stats['relinked_world_cup_channels']}");
 
         $this->info('Done.');
 
