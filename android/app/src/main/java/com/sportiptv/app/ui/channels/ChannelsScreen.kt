@@ -61,7 +61,7 @@ fun ChannelsScreen(
 ) {
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val columnsCount = if (isLandscape) 6 else 3
+    val columnsCount = if (isLandscape) 8 else 4
 
     val categories by viewModel.categories.collectAsState()
     val packages by viewModel.packages.collectAsState()
@@ -227,11 +227,11 @@ private fun ColumnScope.ChannelsGrid(
     viewModel: ChannelsViewModel
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(if (isLandscape) 4 else 2),
+        columns = GridCells.Fixed(if (isLandscape) 6 else 3),
         modifier = Modifier.fillMaxWidth().weight(1f),
-        contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(channels, key = { it.id }) { channel ->
             ChannelCard(
@@ -256,8 +256,8 @@ private fun ColumnScope.NetworkPackageGrid(
         columns = GridCells.Fixed(columnsCount),
         modifier = Modifier.fillMaxWidth().weight(1f),
         contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(entries, key = {
             when (it) {
@@ -304,7 +304,7 @@ fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.1f)
+            .aspectRatio(1.35f)
             .clip(RoundedCornerShape(12.dp))
             .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
             .clickable { onClick() },

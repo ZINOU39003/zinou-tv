@@ -63,6 +63,23 @@ class DeploySetupController extends Controller
             }
         }
 
+        if ($request->query('import_channels') === '1') {
+            try {
+                $exportPath = base_path('database/data/channel-data-export.json');
+                if (! file_exists($exportPath)) {
+                    $steps['channels_import'] = 'SKIPPED — database/data/channel-data-export.json not found';
+                } else {
+                    Artisan::call('channels:import', [
+                        'path' => 'database/data/channel-data-export.json',
+                        '--replace' => $request->query('replace_channels') === '1',
+                    ]);
+                    $steps['channels_import'] = trim(Artisan::output()) ?: 'OK';
+                }
+            } catch (\Throwable $e) {
+                $steps['channels_import'] = 'FAILED: '.$e->getMessage();
+            }
+        }
+
         try {
             $steps['users_count'] = DB::table('users')->count();
             $steps['admin_exists'] = DB::table('users')

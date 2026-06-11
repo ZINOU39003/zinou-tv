@@ -41,6 +41,11 @@ php artisan route:cache
 php artisan view:cache
 php artisan storage:link --force 2>/dev/null || true
 
+if [ -f database/data/channel-data-export.json ] && [ "${IMPORT_CHANNELS_ON_DEPLOY}" = "1" ]; then
+    echo "==> Importing channel data from export file..."
+    php artisan channels:import database/data/channel-data-export.json --replace --no-interaction || true
+fi
+
 PORT="${PORT:-80}"
 sed -i "s/Listen 80/Listen ${PORT}/" /etc/apache2/ports.conf
 sed -i "s/<VirtualHost \*:80>/<VirtualHost *:${PORT}>/" /etc/apache2/sites-available/000-default.conf

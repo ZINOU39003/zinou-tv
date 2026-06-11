@@ -23,20 +23,14 @@
                 </div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
-                <div class="form-group">
-                    <label for="category_id">الباقة أو الشبكة *</label>
-                    <select id="category_id" name="category_id" class="form-control" required>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}" {{ old('category_id', $channel->category_id) == $category->id ? 'selected' : '' }}>{{ $category->name }} @if($category->name_ar && $category->name_ar != $category->name)({{ $category->name_ar }})@endif</option>
-                        @endforeach
-                    </select>
-                </div>
+            @include('admin.channels._network_package_fields', [
+                'selectedCategoryId' => old('category_id', $channel->category_id),
+                'selectedPackageId' => old('package_id', $channel->package_id),
+            ])
 
-                <div class="form-group">
-                    <label for="logo_url">رابط شعار القناة</label>
-                    <input type="url" id="logo_url" name="logo_url" class="form-control" value="{{ old('logo_url', $channel->logo_url) }}">
-                </div>
+            <div class="form-group">
+                <label for="logo_url">رابط شعار القناة</label>
+                <input type="url" id="logo_url" name="logo_url" class="form-control" value="{{ old('logo_url', $channel->logo_url) }}">
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-top: 15px;">

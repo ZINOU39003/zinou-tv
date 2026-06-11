@@ -40,7 +40,7 @@ class PackageController extends Controller
         $data = $request->validated();
         if ($request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('packages', 'public');
-            $data['logo_url'] = asset('storage/' . $path);
+            $data['logo_url'] = '/storage/'.$path;
         }
         Package::create($data);
 
@@ -64,7 +64,7 @@ class PackageController extends Controller
                 }
             }
             $path = $request->file('image_file')->store('packages', 'public');
-            $data['logo_url'] = asset('storage/' . $path);
+            $data['logo_url'] = '/storage/'.$path;
         }
         $package->update($data);
 

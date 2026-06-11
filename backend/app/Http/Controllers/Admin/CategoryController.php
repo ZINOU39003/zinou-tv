@@ -30,7 +30,7 @@ class CategoryController extends Controller
         $data = $request->validated();
         if ($request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('categories', 'public');
-            $data['icon'] = asset('storage/' . $path);
+            $data['icon'] = '/storage/'.$path;
         }
         Category::create($data);
 
@@ -53,7 +53,7 @@ class CategoryController extends Controller
                 }
             }
             $path = $request->file('image_file')->store('categories', 'public');
-            $data['icon'] = asset('storage/' . $path);
+            $data['icon'] = '/storage/'.$path;
         }
         $category->update($data);
 

@@ -73,7 +73,7 @@ fun ChannelCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .border(
                 BorderStroke(
                     1.dp,
@@ -84,17 +84,17 @@ fun ChannelCard(
                         )
                     )
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             )
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = BgSecondary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
+                    .height(72.dp)
                     .background(Color(0xFF0F1222))
             ) {
                 val logoModel = ImageUrlResolver.resolve(channel.logoUrl)
@@ -105,13 +105,13 @@ fun ChannelCard(
                         contentScale = ContentScale.Fit,
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(12.dp)
+                            .padding(6.dp)
                     )
                 } else {
                     Text(
                         text = channel.name.take(2).uppercase(),
                         color = Color.White,
-                        fontSize = 28.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -149,7 +149,7 @@ fun ChannelCard(
                         imageVector = if (channel.isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite toggle",
                         tint = if (channel.isFavorited) DangerColor else Color.White,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -158,7 +158,7 @@ fun ChannelCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
             ) {
                 val isArabic = java.util.Locale.getDefault().language == "ar"
                 val displayName = if (isArabic && !channel.nameAr.isNullOrEmpty()) channel.nameAr else channel.name
@@ -168,7 +168,7 @@ fun ChannelCard(
                 Text(
                     text = displayName,
                     color = TextMain,
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -179,7 +179,7 @@ fun ChannelCard(
                 Text(
                     text = displayCategory,
                     color = TextMuted,
-                    fontSize = 10.sp,
+                    fontSize = 9.sp,
                     fontWeight = FontWeight.Medium
                 )
             }

@@ -36,23 +36,12 @@
                     </div>
                 </div>
 
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="category_id">الباقة أو الشبكة *</label>
-                        <select id="category_id" name="category_id" class="form-control" required>
-                            <option value="">اختر تصنيفاً...</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }} @if($category->name_ar && $category->name_ar != $category->name)({{ $category->name_ar }})@endif
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="logo_url">رابط شعار القناة</label>
-                        <input type="url" id="logo_url" name="logo_url" class="form-control"
-                               placeholder="https://cdn.example.com/logo.png" value="{{ old('logo_url') }}">
-                    </div>
+                @include('admin.channels._network_package_fields')
+
+                <div class="form-group">
+                    <label for="logo_url">رابط شعار القناة</label>
+                    <input type="url" id="logo_url" name="logo_url" class="form-control"
+                           placeholder="https://cdn.example.com/logo.png" value="{{ old('logo_url') }}">
                 </div>
 
                 <!-- Classification -->
