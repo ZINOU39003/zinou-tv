@@ -145,8 +145,32 @@ class ChannelDataSyncService
                 ->where('category_id', $categoryId)
                 ->first();
 
+            if (! $existing && ! $replaceExisting) {
+                $existing = Channel::where('name', $row['name'])->first();
+            }
+
             if ($existing && ! $replaceExisting) {
-                $stats['skipped']++;
+                $payload = [
+                    'name' => $row['name'],
+                    'name_ar' => $row['name_ar'] ?? $row['name'],
+                    'category_id' => $categoryId,
+                    'package_id' => $packageId,
+                    'logo_url' => $row['logo_url'] ?? $existing->logo_url,
+                    'stream_url' => $row['stream_url'],
+                    'stream_type' => $row['stream_type'] ?? 'm3u8',
+                    'quality' => $row['quality'] ?? 'HD',
+                    'backup_url' => $row['backup_url'] ?? null,
+                    'country' => $row['country'] ?? null,
+                    'language' => $row['language'] ?? null,
+                    'continent' => $row['continent'] ?? null,
+                    'sort_order' => $row['sort_order'] ?? 0,
+                    'is_active' => $row['is_active'] ?? true,
+                    'drm_license_url' => $row['drm_license_url'] ?? null,
+                    'drm_headers' => $row['drm_headers'] ?? null,
+                    'servers' => $row['servers'] ?? [],
+                ];
+                $this->channelService->updateChannel($existing, $payload);
+                $stats['channels']++;
 
                 continue;
             }
@@ -178,6 +202,45 @@ class ChannelDataSyncService
             }
             $stats['channels']++;
         }
+
+        return $stats;
+    }
+
+    /**
+     * Restore Render's original 2-network layout and re-link World Cup channels.
+     */
+    public function restoreRenderLegacyStructure(): array
+    {
+        $legacy = json_decode(
+            file_get_contents(base_path('database/data/render-legacy-export.json')),
+            true
+        ) ?: [];
+
+        $stats = $this->import($legacy, false);
+
+        $worldCup = Category::where('slug', 'world-cup-2026')->first();
+        $package = $worldCup
+            ? Package::where('slug', 'world-cup-2026-bein')->where('category_id', $worldCup->id)->first()
+            : null;
+
+        $relinked = 0;
+        if ($worldCup && $package) {
+            $legacySlugs = ['bein-sports-max', 'world-cup-2026'];
+            $legacyCategoryIds = Category::whereIn('slug', $legacySlugs)->pluck('id');
+
+            $relinked = Channel::query()
+                ->where(function ($q) use ($legacyCategoryIds) {
+                    $q->where('name', 'like', '%beIN Sports Max%')
+                        ->orWhere('name', 'like', '%Sports Max%')
+                        ->orWhereIn('category_id', $legacyCategoryIds);
+                })
+                ->update([
+                    'category_id' => $worldCup->id,
+                    'package_id' => $package->id,
+                ]);
+        }
+
+        $stats['relinked_world_cup_channels'] = $relinked;
 
         return $stats;
     }

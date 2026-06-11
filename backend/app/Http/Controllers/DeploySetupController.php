@@ -63,6 +63,17 @@ class DeploySetupController extends Controller
             }
         }
 
+        if ($request->query('restore_legacy') === '1') {
+            try {
+                Artisan::call('channels:restore-legacy', [
+                    '--merge-local' => $request->query('merge_local') !== '0',
+                ]);
+                $steps['restore_legacy'] = trim(Artisan::output()) ?: 'OK';
+            } catch (\Throwable $e) {
+                $steps['restore_legacy'] = 'FAILED: '.$e->getMessage();
+            }
+        }
+
         if ($request->query('import_channels') === '1') {
             try {
                 $exportPath = base_path('database/data/channel-data-export.json');

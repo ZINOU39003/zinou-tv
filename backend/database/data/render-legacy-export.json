@@ -1,0 +1,42 @@
+{
+    "version": 1,
+    "description": "Render networks structure before local migration (merge only — never delete)",
+    "categories": [
+        {
+            "slug": "world-cup-2026",
+            "name": "World Cup 2026",
+            "name_ar": "كأس العالم 2026",
+            "type": "network",
+            "icon": {
+                "type": "url",
+                "value": "https://upload.wikimedia.org/wikipedia/en/thumb/8/84/2026_FIFA_World_Cup.svg/200px-2026_FIFA_World_Cup.svg.png"
+            },
+            "sort_order": 1,
+            "is_active": true
+        },
+        {
+            "slug": "arab-channels",
+            "name": "arab CHANNEL",
+            "name_ar": "قنوات عربية",
+            "type": "network",
+            "icon": null,
+            "sort_order": 2,
+            "is_active": true
+        }
+    ],
+    "packages": [
+        {
+            "slug": "world-cup-2026-bein",
+            "category_slug": "world-cup-2026",
+            "name": "كاس العالم 2026",
+            "name_ar": "كاس العالم 2026",
+            "logo_url": {
+                "type": "url",
+                "value": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/2026_FIFA_World_Cup.svg/200px-2026_FIFA_World_Cup.svg.png"
+            },
+            "sort_order": 1,
+            "is_active": true
+        }
+    ],
+    "channels": []
+}
