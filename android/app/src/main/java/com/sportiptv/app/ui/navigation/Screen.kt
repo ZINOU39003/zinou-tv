@@ -26,4 +26,6 @@ sealed class Screen(val route: String) {
     object Player : Screen("player_screen/{channelId}") {
         fun createRoute(channelId: Long) = "player_screen/$channelId"
     }
+
+    object AdminPanel : Screen("admin_panel_screen")
 }

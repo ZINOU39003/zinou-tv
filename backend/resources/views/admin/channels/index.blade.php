@@ -23,6 +23,10 @@
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             استيراد M3U
         </a>
+        <a href="{{ route('admin.channels.export-m3u') }}" class="btn btn-info">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" transform="rotate(180 12 12)"/></svg>
+            استخراج M3U
+        </a>
 
         {{-- زر حذف جميع القنوات --}}
         <form action="{{ route('admin.channels.destroy-all') }}" method="POST"

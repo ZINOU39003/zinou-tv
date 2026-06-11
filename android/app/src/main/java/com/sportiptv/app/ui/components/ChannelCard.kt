@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,29 +74,20 @@ fun ChannelCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .border(
-                BorderStroke(
-                    1.dp,
-                    Brush.linearGradient(
-                        colors = listOf(
-                            Color(0xFF9D00FF).copy(alpha = 0.6f),
-                            Color(0xFFE5A93C).copy(alpha = 0.3f)
-                        )
-                    )
-                ),
-                shape = RoundedCornerShape(8.dp)
-            )
+            .aspectRatio(1f) // Square aspect ratio
+            .clip(RoundedCornerShape(4.dp))
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = BgSecondary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(4.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(72.dp)
-                    .background(Color(0xFF0F1222))
+                modifier = Modifier.weight(1f).fillMaxWidth(0.85f),
+                contentAlignment = Alignment.Center
             ) {
                 val logoModel = ImageUrlResolver.resolve(channel.logoUrl)
                 if (!logoModel.isNullOrBlank()) {
@@ -103,86 +95,31 @@ fun ChannelCard(
                         model = logoModel,
                         contentDescription = channel.name,
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(6.dp)
+                        modifier = Modifier.fillMaxSize().padding(8.dp)
                     )
                 } else {
                     Text(
                         text = channel.name.take(2).uppercase(),
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-
-                // Quality Badge (e.g. FHD, HD)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(8.dp)
-                        .background(
-                            brush = Brush.horizontalGradient(
-                                colors = listOf(Primary, AccentBlue)
-                            ),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = channel.quality,
-                        color = Color.Black,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                }
-
-                // Favorite button Overlay
-                IconButton(
-                    onClick = onFavoriteToggle,
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(4.dp)
-                ) {
-                    Icon(
-                        imageVector = if (channel.isFavorited) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                        contentDescription = "Favorite toggle",
-                        tint = if (channel.isFavorited) DangerColor else Color.White,
-                        modifier = Modifier.size(18.dp)
+                        color = Primary,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
-
-            // Info details
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 4.dp)
-            ) {
-                val isArabic = java.util.Locale.getDefault().language == "ar"
-                val displayName = if (isArabic && !channel.nameAr.isNullOrEmpty()) channel.nameAr else channel.name
-                val flag = channel.country?.let { getCountryFlagByName(it) } ?: ""
-                val displayCategory = flag + (if (isArabic && !channel.categoryNameAr.isNullOrEmpty()) channel.categoryNameAr else (channel.categoryName ?: "General"))
-
-                Text(
-                    text = displayName,
-                    color = TextMain,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                
-                Spacer(modifier = Modifier.height(2.dp))
-                
-                Text(
-                    text = displayCategory,
-                    color = TextMuted,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            val isArabic = java.util.Locale.getDefault().language == "ar"
+            val displayName = if (isArabic && !channel.nameAr.isNullOrEmpty()) channel.nameAr else channel.name
+            
+            Text(
+                text = displayName,
+                color = TextMain,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

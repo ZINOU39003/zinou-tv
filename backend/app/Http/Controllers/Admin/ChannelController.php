@@ -116,6 +116,53 @@ class ChannelController extends Controller
         return redirect()->back()->with('success', 'Channel order updated.');
     }
 
+    public function exportM3u(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $channels = Channel::with(['category', 'package'])->orderBy('sort_order')->get();
+        
+        $response = new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($channels) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "#EXTM3U\n");
+            
+            foreach ($channels as $channel) {
+                $logo = $channel->logo_url ? ' tvg-logo="' . $channel->logo_url . '"' : '';
+                
+                $categoryName = $channel->category ? $channel->category->name : 'Uncategorized';
+                $packageName = $channel->package ? $channel->package->name : '';
+                
+                // Construct the group-title and tvg-name. The user requested: image, packages (categories), and network (packages).
+                // M3U players use group-title for folders. 
+                $group = $categoryName;
+                if ($packageName) {
+                    $group .= ' - ' . $packageName;
+                }
+                
+                $groupAttr = ' group-title="' . str_replace('"', '', $group) . '"';
+                
+                // Decrypt URL using ChannelService
+                $url = '';
+                try {
+                    $url = $this->channelService->getDecryptedStreamUrl($channel);
+                } catch (\Exception $e) {
+                    $url = $channel->stream_url;
+                }
+                if (empty($url)) {
+                    $url = $channel->stream_url;
+                }
+                
+                fwrite($handle, "#EXTINF:-1" . $logo . $groupAttr . "," . $channel->name . "\n");
+                fwrite($handle, $url . "\n");
+            }
+            
+            fclose($handle);
+        });
+
+        $response->headers->set('Content-Type', 'audio/x-mpegurl');
+        $response->headers->set('Content-Disposition', 'attachment; filename="channels_export.m3u"');
+
+        return $response;
+    }
+
     public function showImport(): View
     {
         $categories = Category::orderBy('sort_order')->get();

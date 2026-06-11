@@ -40,6 +40,7 @@ import com.sportiptv.app.ui.settings.SettingsScreen
 import com.sportiptv.app.ui.splash.SplashScreen
 import com.sportiptv.app.ui.subscription.SubscriptionScreen
 import com.sportiptv.app.ui.worldcup.WorldCupScreen
+import com.sportiptv.app.ui.admin.AdminPanelScreen
 
 @Composable
 fun NavGraph(
@@ -250,6 +251,9 @@ fun NavGraph(
                         onNavigateToSubscription = {
                             navController.navigate(Screen.Subscription.route)
                         },
+                        onNavigateToAdminPanel = {
+                            navController.navigate(Screen.AdminPanel.route)
+                        },
                         onLogout = {
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(Screen.Home.route) { inclusive = true }
@@ -264,6 +268,13 @@ fun NavGraph(
                         onBackClick = {
                             navController.popBackStack()
                         }
+                    )
+                }
+
+                // Admin Panel WebView Route
+                composable(Screen.AdminPanel.route) {
+                    AdminPanelScreen(
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 

@@ -87,6 +87,7 @@ Route::middleware(['web', 'auth', 'admin', 'security.headers'])->prefix('admin')
     // Live Streaming Channels Management
     Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');
     Route::get('/channels/create', [ChannelController::class, 'create'])->name('channels.create');
+    Route::get('/channels/export-m3u', [ChannelController::class, 'exportM3u'])->name('channels.export-m3u');
     Route::get('/channels/import', [ChannelController::class, 'showImport'])->name('channels.import');
     Route::post('/channels/import', [ChannelController::class, 'import'])->name('channels.import.store');
     Route::delete('/channels/destroy-all', [ChannelController::class, 'destroyAll'])->name('channels.destroy-all');

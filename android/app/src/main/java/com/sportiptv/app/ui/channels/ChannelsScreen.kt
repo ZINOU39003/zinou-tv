@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -103,63 +105,59 @@ fun ChannelsScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                IconButton(onClick = onNavigateHome) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Primary)
+                }
                 Text(
-                    text = networksTitleText,
-                    color = Color.White,
-                    fontSize = 22.sp,
+                    text = "ZINOU TV",
+                    color = Primary,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
-                IconButton(onClick = onNavigateHome) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Primary)
+                IconButton(onClick = { /* TODO: Search */ }) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
                 }
             }
         } else {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 val category = categories.find { it.id == selectedCategoryId }
                 val catName = category?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: ""
                 val pkg = packages.find { it.id == selectedPackageId }
                 val pkgName = pkg?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: ""
 
-                Button(
+                IconButton(
                     onClick = {
                         if (selectedPackageId != null) {
                             viewModel.selectPackage(null)
                         } else {
                             viewModel.selectCategory(null)
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0x22FFFFFF)),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(8.dp)
+                    }
                 ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = networksTitleText, color = Color.White, fontSize = 12.sp)
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Primary)
                 }
-
-                Spacer(modifier = Modifier.width(16.dp))
 
                 Text(
                     text = if (selectedPackageId != null) "$catName - $pkgName" else catName,
                     color = Primary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                IconButton(onClick = onNavigateHome) {
-                    Icon(Icons.Default.Home, contentDescription = "Home", tint = Primary, modifier = Modifier.size(22.dp))
+                IconButton(onClick = { /* TODO: Search */ }) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
                 }
             }
         }
@@ -255,9 +253,9 @@ private fun ColumnScope.NetworkPackageGrid(
     LazyVerticalGrid(
         columns = GridCells.Fixed(columnsCount),
         modifier = Modifier.fillMaxWidth().weight(1f),
-        contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 20.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        contentPadding = PaddingValues(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(entries, key = {
             when (it) {
@@ -287,81 +285,66 @@ private fun ColumnScope.NetworkPackageGrid(
 
 @Composable
 fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () -> Unit) {
-    val hash = id.hashCode()
-    val color1 = Color(
-        red = ((hash and 0xFF) / 255f * 0.35f) + 0.05f,
-        green = (((hash shr 8) and 0xFF) / 255f * 0.35f) + 0.05f,
-        blue = (((hash shr 16) and 0xFF) / 255f * 0.35f) + 0.05f,
-        alpha = 1.0f
-    )
-    val color2 = Color(
-        red = ((hash shr 4) and 0xFF) / 255f * 0.15f,
-        green = ((hash shr 12) and 0xFF) / 255f * 0.15f,
-        blue = ((hash shr 20) and 0xFF) / 255f * 0.15f,
-        alpha = 1.0f
-    )
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1.35f)
-            .clip(RoundedCornerShape(12.dp))
-            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+            .aspectRatio(1f) // Square aspect ratio as in images
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        shape = RoundedCornerShape(4.dp),
+        colors = CardDefaults.cardColors(containerColor = CardBg)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(color1, color2)))
-                .padding(8.dp)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Box(
+                modifier = Modifier.weight(1f).fillMaxWidth(0.85f),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.weight(1f).fillMaxWidth(0.85f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val resolvedUrl = ImageUrlResolver.resolve(logoUrl)
-                    if (!resolvedUrl.isNullOrBlank()) {
-                        AsyncImage(
-                            model = resolvedUrl,
-                            contentDescription = null,
-                            modifier = Modifier.fillMaxSize().padding(4.dp),
-                            contentScale = ContentScale.Fit
-                        )
-                    } else {
-                        Text(name.take(2).uppercase(), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                    }
+                val resolvedUrl = ImageUrlResolver.resolve(logoUrl)
+                if (!resolvedUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = resolvedUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Text(name.take(2).uppercase(), color = Primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = name,
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = name,
+                color = TextMain,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
 @Composable
 fun LoadingState(message: String) {
-    Box(
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator(color = Primary)
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = message, color = TextMuted, fontSize = 14.sp)
+    var showLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(250L)
+        showLoading = true
+    }
+    if (showLoading) {
+        Box(
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                CircularProgressIndicator(color = Primary)
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = message, color = TextMuted, fontSize = 14.sp)
+            }
         }
     }
 }

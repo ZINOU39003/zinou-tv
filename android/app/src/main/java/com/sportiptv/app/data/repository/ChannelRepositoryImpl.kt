@@ -187,15 +187,67 @@ class ChannelRepositoryImpl @Inject constructor(
 
     override fun getChannelDetails(id: Long): Flow<Resource<Channel>> = flow {
         emit(Resource.Loading)
-        var fetchSuccessful = false
         val isFav = try {
             favoriteDao.isChannelFavorited(id).first()
         } catch (e: Exception) {
             false
         }
         
+        var localChannel: Channel? = null
         try {
-            // 1. Always attempt to fetch the latest details from the remote API first
+            val local = channelDao.getChannelById(id)
+            if (local != null) {
+                val serversList = try {
+                    local.serversJson?.let {
+                        json.decodeFromString<List<ChannelServerDto>>(it).map { dto ->
+                            ChannelServer(
+                                id = dto.id,
+                                name = dto.name,
+                                streamUrl = dto.stream_url,
+                                streamType = dto.stream_type,
+                                quality = dto.quality
+                            )
+                        }
+                    } ?: emptyList()
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                localChannel = Channel(
+                    id = local.id,
+                    name = local.name,
+                    nameAr = local.nameAr,
+                    categoryId = local.categoryId,
+                    categoryName = local.categoryName,
+                    categoryNameAr = local.categoryNameAr,
+                    packageId = local.packageId,
+                    packageName = local.packageName,
+                    packageNameAr = local.packageNameAr,
+                    logoUrl = local.logoUrl,
+                    streamUrl = local.streamUrl,
+                    streamType = local.streamType,
+                    quality = local.quality,
+                    backupUrl = local.backupUrl,
+                    sortOrder = local.sortOrder,
+                    isActive = local.isActive,
+                    country = local.country,
+                    language = local.language,
+                    continent = local.continent,
+                    isFavorited = isFav,
+                    drmLicenseUrl = local.drmLicenseUrl,
+                    drmHeaders = local.drmHeaders,
+                    servers = serversList
+                )
+                emit(Resource.Success(localChannel))
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        var fetchSuccessful = false
+        var remoteChannel: Channel? = null
+        try {
+            // Attempt to fetch the latest details from the remote API in the background
             val response = sportApi.getChannelDetails(id)
             if (response.isSuccessful && response.body()?.success == true) {
                 val dto = response.body()?.data
@@ -209,7 +261,7 @@ class ChannelRepositoryImpl @Inject constructor(
                             quality = serverDto.quality
                         )
                     }
-                    val channel = Channel(
+                    remoteChannel = Channel(
                         id = dto.id,
                         name = dto.name,
                         nameAr = dto.name_ar,
@@ -267,69 +319,17 @@ class ChannelRepositoryImpl @Inject constructor(
                     )
                     channelDao.insertChannels(listOf(entity))
                     
-                    emit(Resource.Success(channel))
+                    emit(Resource.Success(remoteChannel))
                     fetchSuccessful = true
                 }
             }
         } catch (e: Exception) {
-            // Network or API failure, will fallback to local cache
             e.printStackTrace()
         }
 
-        // 2. If remote fetch failed, fallback to local database cache
-        if (!fetchSuccessful) {
-            try {
-                val local = channelDao.getChannelById(id)
-                if (local != null) {
-                    val serversList = try {
-                        local.serversJson?.let {
-                            json.decodeFromString<List<ChannelServerDto>>(it).map { dto ->
-                                ChannelServer(
-                                    id = dto.id,
-                                    name = dto.name,
-                                    streamUrl = dto.stream_url,
-                                    streamType = dto.stream_type,
-                                    quality = dto.quality
-                                )
-                            }
-                        } ?: emptyList()
-                    } catch (e: Exception) {
-                        emptyList()
-                    }
-
-                    emit(Resource.Success(
-                        Channel(
-                            id = local.id,
-                            name = local.name,
-                            nameAr = local.nameAr,
-                            categoryId = local.categoryId,
-                            categoryName = local.categoryName,
-                            categoryNameAr = local.categoryNameAr,
-                            packageId = local.packageId,
-                            packageName = local.packageName,
-                            packageNameAr = local.packageNameAr,
-                            logoUrl = local.logoUrl,
-                            streamUrl = local.streamUrl,
-                            streamType = local.streamType,
-                            quality = local.quality,
-                            backupUrl = local.backupUrl,
-                            sortOrder = local.sortOrder,
-                            isActive = local.isActive,
-                            country = local.country,
-                            language = local.language,
-                            continent = local.continent,
-                            isFavorited = isFav,
-                            drmLicenseUrl = local.drmLicenseUrl,
-                            drmHeaders = local.drmHeaders,
-                            servers = serversList
-                        )
-                    ))
-                } else {
-                    emit(Resource.Error("Failed to fetch channel details and no offline cache available."))
-                }
-            } catch (e: Exception) {
-                emit(Resource.Error("Offline cache read error: ${e.localizedMessage}"))
-            }
+        // If remote fetch failed and we didn't have local cache, emit error
+        if (!fetchSuccessful && localChannel == null) {
+            emit(Resource.Error("Failed to fetch channel details and no offline cache available."))
         }
     }.flowOn(Dispatchers.IO)
 
