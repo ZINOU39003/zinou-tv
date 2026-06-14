@@ -63,4 +63,5 @@ Thumbs.db
 *.swo
 
 # Misc
-assets/
+/assets/
+!frontend/public/assets/
