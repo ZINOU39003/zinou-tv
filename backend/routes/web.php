@@ -30,6 +30,11 @@ Route::get('/deploy/setup/{token}', DeploySetupController::class);
 // Public Scores Page
 Route::get('/scores', [ScoresWebController::class, 'index'])->name('scores.index');
 
+// App Download Page
+Route::get('/download', function () {
+    return view('download');
+})->name('download');
+
 // Redirect root to admin login
 Route::get('/', function () {
     return redirect()->route('admin.login');

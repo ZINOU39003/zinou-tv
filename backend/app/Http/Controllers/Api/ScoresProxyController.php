@@ -230,7 +230,7 @@ class ScoresProxyController extends Controller
     public function matchStats(int $gameId): JsonResponse
     {
         return $this->fetch(self::BASE_URL . '/game/stats/', [
-            'gameId'    => $gameId,
+            'games'     => $gameId,
             'langId'    => self::LANG_ID,
             'appTypeId' => self::APP_TYPE,
         ], self::CACHE_MEDIUM);
@@ -242,7 +242,7 @@ class ScoresProxyController extends Controller
      */
     public function matchLineup(int $gameId): JsonResponse
     {
-        return $this->fetch(self::BASE_URL . '/game/lineup/', [
+        return $this->fetch(self::BASE_URL . '/game/', [
             'gameId'    => $gameId,
             'langId'    => self::LANG_ID,
             'appTypeId' => self::APP_TYPE,
@@ -255,11 +255,51 @@ class ScoresProxyController extends Controller
      */
     public function standings(Request $request, int $competitionId): JsonResponse
     {
-        return $this->fetch(self::BASE_URL . '/competition/standings/', [
-            'competitionId' => $competitionId,
-            'langId'        => self::LANG_ID,
-            'appTypeId'     => self::APP_TYPE,
-            'timezoneName'  => $this->timezone($request),
+        try {
+            $detailResponse = Http::withoutVerifying()
+                ->withHeaders($this->headers())
+                ->timeout(10)
+                ->get(self::BASE_URL . '/competitions/', [
+                    'competitionId' => $competitionId,
+                    'langId'        => self::LANG_ID,
+                    'appTypeId'     => self::APP_TYPE,
+                ]);
+
+            if (!$detailResponse->successful()) {
+                return response()->json(['error' => 'Failed to fetch competition metadata'], 502);
+            }
+
+            $comp = $detailResponse->json('competitions.0');
+            $season = $comp['currentSeasonNum'] ?? null;
+
+            if ($season === null) {
+                return response()->json(['error' => 'Competition does not have an active season'], 404);
+            }
+
+            return $this->fetch(self::BASE_URL . '/standings/', [
+                'competitions' => $competitionId,
+                'season'       => $season,
+                'langId'       => self::LANG_ID,
+                'appTypeId'    => self::APP_TYPE,
+                'timezoneName' => $this->timezone($request),
+            ], self::CACHE_LONG);
+        } catch (\Throwable $e) {
+            Log::warning('Error resolving standings: ' . $e->getMessage());
+            return response()->json(['error' => 'Internal proxy error resolving standings'], 500);
+        }
+    }
+
+    /**
+     * GET /api/scores/topscorers/{competitionId}
+     * League top performers / scorers
+     */
+    public function topScorers(int $competitionId): JsonResponse
+    {
+        return $this->fetch(self::BASE_URL . '/stats/', [
+            'competitions' => $competitionId,
+            'langId'       => self::LANG_ID,
+            'appTypeId'    => self::APP_TYPE,
+            'withSeasons'  => 'true',
         ], self::CACHE_LONG);
     }
 
@@ -278,7 +318,6 @@ class ScoresProxyController extends Controller
                     ->timeout(10)
                     ->get(self::BASE_URL . '/games/', [
                         'competitors'  => $competitorId,
-                        'sports'       => 1,
                         'langId'       => self::LANG_ID,
                         'appTypeId'    => self::APP_TYPE,
                         'timezoneName' => $this->timezone($request),
@@ -299,7 +338,7 @@ class ScoresProxyController extends Controller
                     $lineupResponse = Http::withoutVerifying()
                         ->withHeaders($this->headers())
                         ->timeout(10)
-                        ->get(self::BASE_URL . '/game/lineup/', [
+                        ->get(self::BASE_URL . '/game/', [
                             'gameId'    => $game['id'],
                             'langId'    => self::LANG_ID,
                             'appTypeId' => self::APP_TYPE,
@@ -349,7 +388,7 @@ class ScoresProxyController extends Controller
     public function search(Request $request): JsonResponse
     {
         $query = $request->get('q', '');
-        return $this->fetch(self::BASE_URL . '/competitions/', [
+        return $this->fetch(self::BASE_URL . '/search/', [
             'langId'    => self::LANG_ID,
             'appTypeId' => self::APP_TYPE,
             'query'     => $query,
@@ -388,11 +427,229 @@ class ScoresProxyController extends Controller
      */
     public function competitorGames(int $competitorId): JsonResponse
     {
+        $startDate = now()->subDays(14)->format('d/m/Y');
+        $endDate   = now()->addDays(16)->format('d/m/Y');
+
         return $this->fetch(self::BASE_URL . '/games/', [
             'competitors' => $competitorId,
-            'sports'      => 1, // Only Football
             'langId'      => self::LANG_ID,
             'appTypeId'   => self::APP_TYPE,
+            'startDate'   => $startDate,
+            'endDate'     => $endDate,
         ], self::CACHE_MEDIUM);
+    }
+
+    /**
+     * GET /api/scores/player/{athleteId}
+     * Get player/athlete profile details
+     */
+    public function playerDetail(int $athleteId): JsonResponse
+    {
+        return $this->fetch(self::BASE_URL . '/athletes/', [
+            'athletes'  => $athleteId,
+            'langId'    => self::LANG_ID,
+            'appTypeId' => self::APP_TYPE,
+        ], self::CACHE_LONG);
+    }
+
+    /**
+     * GET /api/scores/news
+     * Get football news articles from WordPress REST API
+     */
+    public function news(): JsonResponse
+    {
+        $cacheKey = 'scores_news_wp_30';
+        
+        $data = Cache::remember($cacheKey, self::CACHE_MEDIUM, function () {
+            try {
+                $response = Http::withoutVerifying()
+                    ->withHeaders($this->headers())
+                    ->timeout(12)
+                    ->get('https://www.365scores.com/ar/news/magazine/wp-json/wp/v2/posts', [
+                        '_embed'   => 1,
+                        'per_page' => 30,
+                    ]);
+
+                if (!$response->successful()) {
+                    return null;
+                }
+
+                $posts = $response->json();
+                $mappedNews = [];
+
+                foreach ($posts as $post) {
+                    $id = $post['id'];
+                    $title = $post['title']['rendered'] ?? '';
+                    $publishDate = $post['date'] ?? '';
+                    
+                    // Extract featured image
+                    $image = '';
+                    if (isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])) {
+                        $image = $post['_embedded']['wp:featuredmedia'][0]['source_url'];
+                    } elseif (isset($post['_embedded']['wp:featuredmedia'][0]['media_details']['sizes']['large']['source_url'])) {
+                        $image = $post['_embedded']['wp:featuredmedia'][0]['media_details']['sizes']['large']['source_url'];
+                    }
+
+                    $excerpt = strip_tags($post['excerpt']['rendered'] ?? '');
+
+                    $mappedNews[] = [
+                        'id'          => $id,
+                        'publishDate' => $publishDate,
+                        'title'       => html_entity_decode($title, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        'image'       => $image,
+                        'excerpt'     => html_entity_decode($excerpt, ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+                        'url'         => $post['link'] ?? '',
+                    ];
+                }
+
+                return ['news' => $mappedNews];
+            } catch (\Throwable $e) {
+                Log::warning('WP News Proxy error: ' . $e->getMessage());
+                return null;
+            }
+        });
+
+        if ($data === null) {
+            Cache::forget($cacheKey);
+            return response()->json(['error' => 'Failed to fetch news from WordPress API'], 502);
+        }
+
+        return response()->json($data);
+    }
+
+    /**
+     * GET /api/scores/news/article
+     * Scrape news article content from its URL, with ID fallback to WP REST API
+     */
+    public function newsArticle(Request $request): JsonResponse
+    {
+        $id = $request->query('id');
+        $url = $request->query('url');
+
+        if (!$id && !$url) {
+            return response()->json(['error' => 'Either id or url query parameter is required'], 400);
+        }
+
+        $cacheKey = 'news_article_' . ($id ? 'id_' . $id : 'url_' . md5($url));
+
+        $data = Cache::remember($cacheKey, 86400, function () use ($id, $url) {
+            try {
+                if ($id) {
+                    $response = Http::withoutVerifying()
+                        ->withHeaders($this->headers())
+                        ->timeout(12)
+                        ->get("https://www.365scores.com/ar/news/magazine/wp-json/wp/v2/posts/{$id}", [
+                            '_embed' => 1
+                        ]);
+
+                    if ($response->successful()) {
+                        $post = $response->json();
+                        
+                        $title = html_entity_decode($post['title']['rendered'] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        
+                        $image = '';
+                        if (isset($post['_embedded']['wp:featuredmedia'][0]['source_url'])) {
+                            $image = $post['_embedded']['wp:featuredmedia'][0]['source_url'];
+                        }
+
+                        $contentHtml = $post['content']['rendered'] ?? '';
+                        
+                        // Parse paragraphs from HTML
+                        $paragraphs = [];
+                        if ($contentHtml) {
+                            $doc = new \DOMDocument();
+                            libxml_use_internal_errors(true);
+                            $doc->loadHTML('<?xml encoding="UTF-8">' . $contentHtml);
+                            libxml_clear_errors();
+                            $xpath = new \DOMXPath($doc);
+                            
+                            $nodes = $xpath->query('//p');
+                            foreach ($nodes as $node) {
+                                $text = trim($node->textContent);
+                                if (strlen($text) > 20) {
+                                    $paragraphs[] = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                }
+                            }
+                        }
+
+                        return [
+                            'title' => $title,
+                            'image' => $image,
+                            'paragraphs' => $paragraphs,
+                            'url' => $post['link'] ?? ''
+                        ];
+                    }
+                }
+
+                // Fallback to generic URL Scraper
+                if ($url) {
+                    $response = Http::withoutVerifying()
+                        ->withHeaders($this->headers())
+                        ->timeout(12)
+                        ->get($url);
+
+                    if ($response->successful()) {
+                        $html = $response->body();
+                        $doc = new \DOMDocument();
+                        libxml_use_internal_errors(true);
+                        $doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+                        libxml_clear_errors();
+
+                        $xpath = new \DOMXPath($doc);
+
+                        $titleNode = $xpath->query('//title')->item(0);
+                        $title = $titleNode ? trim($titleNode->textContent) : '';
+                        $title = preg_replace('/ - 365Scores$/iu', '', $title);
+
+                        $imgNode = $xpath->query('//meta[@property="og:image"]/@content')->item(0);
+                        $image = $imgNode ? trim($imgNode->textContent) : '';
+
+                        $selectors = [
+                            '//*[contains(@class, "entry-content")]//p',
+                            '//*[contains(@class, "post-content")]//p',
+                            '//*[contains(@class, "article-content")]//p',
+                            '//article//p',
+                            '//main//p',
+                            '//p'
+                        ];
+
+                        $paragraphs = [];
+                        foreach ($selectors as $sel) {
+                            $nodes = $xpath->query($sel);
+                            if ($nodes->length > 0) {
+                                foreach ($nodes as $node) {
+                                    $text = trim($node->textContent);
+                                    if (strlen($text) > 25 && !str_contains($text, 'cookies') && !str_contains($text, 'privacy') && !str_contains($text, 'Terms of Service')) {
+                                        $paragraphs[] = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                                    }
+                                }
+                                if (count($paragraphs) > 2) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        return [
+                            'title' => $title,
+                            'image' => $image,
+                            'paragraphs' => $paragraphs,
+                            'url' => $url
+                        ];
+                    }
+                }
+
+                return null;
+            } catch (\Throwable $e) {
+                Log::warning('Error scraping news article content: ' . $e->getMessage());
+                return null;
+            }
+        });
+
+        if ($data === null) {
+            Cache::forget($cacheKey);
+            return response()->json(['error' => 'Failed to retrieve article content'], 502);
+        }
+
+        return response()->json($data);
     }
 }
