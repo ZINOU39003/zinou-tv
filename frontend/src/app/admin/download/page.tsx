@@ -147,7 +147,7 @@ export default function AdminDownloadPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-passcode': passcode,
+          'x-admin-passcode': encodeURIComponent(passcode),
         },
         body: JSON.stringify(settings),
       });
@@ -184,7 +184,7 @@ export default function AdminDownloadPage() {
       const res = await fetch('/api-admin/upload', {
         method: 'POST',
         headers: {
-          'x-admin-passcode': passcode,
+          'x-admin-passcode': encodeURIComponent(passcode),
         },
         body: formData,
       });

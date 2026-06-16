@@ -6,8 +6,13 @@ const SETTINGS_PATH = path.join(process.cwd(), 'src/data/download-settings.json'
 const DEFAULT_PASSCODE = process.env.ADMIN_PASSCODE || 'admin123';
 
 function checkAuth(req: NextRequest): boolean {
-  const passcode = req.headers.get('x-admin-passcode') || req.nextUrl.searchParams.get('passcode');
-  return passcode === DEFAULT_PASSCODE;
+  const rawPasscode = req.headers.get('x-admin-passcode') || req.nextUrl.searchParams.get('passcode') || '';
+  try {
+    const passcode = decodeURIComponent(rawPasscode);
+    return passcode === DEFAULT_PASSCODE;
+  } catch {
+    return rawPasscode === DEFAULT_PASSCODE;
+  }
 }
 
 export const dynamic = 'force-dynamic';
