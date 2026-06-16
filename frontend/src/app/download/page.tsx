@@ -8,6 +8,7 @@ interface Plan {
   kicker: string;
   price: string;
   priceInfo: string;
+  popular?: boolean;
   features: string[];
 }
 
@@ -36,6 +37,13 @@ interface Settings {
     downloadBtnText: string;
   };
   sponsorsText: string;
+  whatsappNumber: string;
+  socials: {
+    twitter: string;
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  };
   features: Feature[];
   pricing: {
     title: string;
@@ -55,14 +63,21 @@ interface Settings {
 const DEFAULT_SETTINGS: Settings = {
   hero: {
     kicker: "عالم من المتعة بين يديك!",
-    title: "UGEEN TV",
+    title: "ZINOU TV",
     subtitle: "شاهد ما تحب، أينما كنت",
     description: "استمتع بمشاهدة آلاف القنوات والأفلام والمسلسلات بجودة عالية وبدون تقطيع.",
-    backgroundImage: "/assets/images/banner/banner-bg-14.jpg",
-    playersImage: "/assets/images/banner/ugeen-home-players.png",
+    backgroundImage: "/assets/images/banner/zinou-banner-bg.png",
+    playersImage: "/assets/images/banner/zinou-home-players.png",
     downloadBtnText: "تحميل كود الزائر"
   },
   sponsorsText: "يمكنك الاستمتاع بجميع الباقات مجانًا",
+  whatsappNumber: "213XXXXXXXXX",
+  socials: {
+    twitter: "#0",
+    facebook: "#0",
+    instagram: "#0",
+    youtube: "#0"
+  },
   features: [
     {
       kicker: "وداعًا للتقطعات .",
@@ -85,47 +100,72 @@ const DEFAULT_SETTINGS: Settings = {
   ],
   "pricing": {
     "title": "الأسعار",
-    "subtitle": "خطط مجانية مصممة للجميع",
-    "description": "اختر خطتك المناسبة وابدأ تجربتك مع UGEEN مجاناً",
+    "subtitle": "خطط الاشتراك المتنوعة للجميع",
+    "description": "اختر خطتك المناسبة وابدأ تجربتك المميزة مع ZINOU TV",
     "plans": [
       {
-        "title": "الأعضاء",
-        "kicker": "الخيار الأمثل لعشاق التميز",
-        "price": "0",
-        "priceInfo": "مجاناً - الأكثر شعبية",
+        "title": "باقة الشهر الواحد",
+        "kicker": "30 يوم",
+        "price": "500",
+        "priceInfo": "DZD 500",
         "features": [
-          "لمدة 24 ساعة",
-          "جميع القنوات",
-          "صيغ تحميل مختلفة ومتنوعة",
-          "جميع الباقات والقنوات",
-          "تحكم كامل ببيانات الاكستريم",
-          "دعم على مدار الساعة 24/7"
+          "بدون إعلانات تماماً",
+          "جودة عالية FHD / UHD",
+          "جميع باقات القنوات والسينما",
+          "دعم فني 24/7"
         ]
       },
       {
-        "title": "الزوار",
-        "kicker": "تجربة سريعة ومجانية",
-        "price": "0",
-        "priceInfo": "مجاناً",
+        "title": "باقة 3 أشهر",
+        "kicker": "90 يوم",
+        "price": "1200",
+        "priceInfo": "DZD 1200",
         "features": [
-          "لمدة 24 ساعة",
-          "قنوات محددة",
-          "تحميل عن طريق M3U فقط",
-          "باقات محددة",
-          "لا يوجد تحكم ببيانات الاكستريم"
+          "بدون إعلانات تماماً",
+          "جودة عالية FHD / UHD",
+          "جميع باقات القنوات والسينما",
+          "دعم فني 24/7"
+        ]
+      },
+      {
+        "title": "باقة 6 أشهر",
+        "kicker": "180 يوم",
+        "price": "2000",
+        "priceInfo": "DZD 2000",
+        "features": [
+          "بدون إعلانات تماماً",
+          "جودة عالية FHD / UHD",
+          "جميع باقات القنوات والسينما",
+          "دعم فني 24/7",
+          "تحديثات قائمة مجانية"
+        ]
+      },
+      {
+        "title": "باقة 12 شهراً",
+        "kicker": "365 يوم",
+        "price": "3500",
+        "priceInfo": "DZD 3500",
+        "popular": true,
+        "features": [
+          "بدون إعلانات تماماً",
+          "جودة عالية FHD / UHD",
+          "جميع باقات القنوات والسينما",
+          "دعم فني 24/7",
+          "تحديثات قائمة مجانية",
+          "خصم خاص للدفع السنوي"
         ]
       }
     ]
   },
   "faqs": [
     {
-      "q": "ما هي خدمة UGEEN TV؟",
-      "a": "UGEEN TV خدمة مشاهدة عبر الإنترنت تمنحك تجربة بث سهلة بدون صحن لاقط، اعتمادًا على بروتوكول TV.",
+      "q": "ما هي خدمة ZINOU TV؟",
+      "a": "ZINOU TV خدمة مشاهدة عبر الإنترنت تمنحك تجربة بث سهلة بدون صحن لاقط، اعتمادًا على بروتوكول TV.",
       "icon": "fas fa-tv"
     },
     {
       "q": "ما هو أفضل خيار للمشاهدة عبر Android؟",
-      "a": "ننصح بتحميل تطبيق UGEEN TV لأجهزة أندرويد للحصول على تجربة مشاهدة مباشرة وسهلة. انقر هنا وحمله الآن.",
+      "a": "ننصح بتحميل تطبيق ZINOU TV لأجهزة أندرويد للحصول على تجربة مشاهدة مباشرة وسهلة. انقر هنا وحمله الآن.",
       "icon": "fab fa-android",
       "link": "/zinou-tv.apk"
     },
@@ -140,7 +180,7 @@ const DEFAULT_SETTINGS: Settings = {
       "icon": "fas fa-rocket"
     },
     {
-      "q": "بماذا يتميز تطبيق UGEEN TV عن التطبيقات المعتادة؟",
+      "q": "بماذا يتميز تطبيق ZINOU TV عن التطبيقات المعتادة؟",
       "a": "يتميز بتجربة مشاهدة أبسط، أقسام متنوعة، جودات متعددة، وميزة اختيار الجودة المناسبة خلال الأحداث المهمة.",
       "icon": "fas fa-shield-alt"
     }
@@ -218,7 +258,7 @@ export default function DownloadPage() {
     loadSettings();
   }, []);
 
-  // Dynamically load Ugeen's minified CSS on client mount to avoid SSR hydration mismatches
+  // Dynamically load Zinou's minified CSS on client mount to avoid SSR hydration mismatches
   useEffect(() => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -244,17 +284,14 @@ export default function DownloadPage() {
     };
   }, []);
 
-  const membersPlan = settings.pricing.plans[0] || DEFAULT_SETTINGS.pricing.plans[0];
-  const visitorsPlan = settings.pricing.plans[1] || DEFAULT_SETTINGS.pricing.plans[1];
-
   return (
     <div className="min-h-screen bg-[#070b1e] text-white relative overflow-hidden font-sans select-none" dir="rtl">
 
-      {/* Floating decorative spheres (Ugeen balls) */}
-      <img src="/assets/images/balls/1.png" alt="balls" className="absolute top-[12%] right-[10%] w-16 h-16 animate-bounce opacity-30 pointer-events-none select-none" />
-      <img src="/assets/images/balls/2.png" alt="balls" className="absolute top-[45%] left-[8%] w-20 h-20 animate-pulse opacity-20 pointer-events-none select-none" />
-      <img src="/assets/images/balls/3.png" alt="balls" className="absolute top-[75%] right-[5%] w-14 h-14 opacity-25 pointer-events-none select-none" />
-      <img src="/assets/images/balls/4.png" alt="balls" className="absolute bottom-[10%] left-[12%] w-16 h-16 opacity-30 pointer-events-none select-none" />
+      {/* Floating decorative spheres (Zinou balls) */}
+      <img src="/assets/images/balls/1.png" alt="balls" className="absolute top-[12%] right-[10%] w-16 h-16 animate-bounce opacity-30 pointer-events-none select-none filter-gold" />
+      <img src="/assets/images/balls/2.png" alt="balls" className="absolute top-[45%] left-[8%] w-20 h-20 animate-pulse opacity-20 pointer-events-none select-none filter-gold" />
+      <img src="/assets/images/balls/3.png" alt="balls" className="absolute top-[75%] right-[5%] w-14 h-14 opacity-25 pointer-events-none select-none filter-gold" />
+      <img src="/assets/images/balls/4.png" alt="balls" className="absolute bottom-[10%] left-[12%] w-16 h-16 opacity-30 pointer-events-none select-none filter-gold" />
 
       {/* Header bar */}
       <header className="header-section">
@@ -262,7 +299,7 @@ export default function DownloadPage() {
           <div className="header-wrapper">
             <div className="logo">
               <Link href="/" className="ugeen-home-logo-text">
-                UGEEN
+                ZINOU TV
               </Link>
             </div>
             <div className="header-right">
@@ -289,7 +326,7 @@ export default function DownloadPage() {
         }}
       >
         <div className="bottom-shape d-lg-block d-none">
-          <img src="/assets/css/img/banner-shape-14.png" alt="banner" />
+          <img src="/assets/css/img/banner-shape-14.png" alt="banner" className="filter-gold" />
         </div>
         
         <div className="container">
@@ -380,7 +417,7 @@ export default function DownloadPage() {
                     <img
                       src={feat.image}
                       alt={feat.title}
-                      className="ugeen-feature-visual"
+                      className="ugeen-feature-visual filter-gold-visual"
                       style={{ width: '92%' }}
                     />
                   </div>
@@ -405,7 +442,7 @@ export default function DownloadPage() {
                     <img
                       src={feat.image}
                       alt={feat.title}
-                      className="ugeen-feature-visual"
+                      className="ugeen-feature-visual filter-gold-visual"
                       style={{ width: '92%' }}
                     />
                   </div>
@@ -417,7 +454,7 @@ export default function DownloadPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section (4 plans matching the 4th image layout) */}
       <section 
         className="pricing-section ugeen-pricing-v6 padding-top oh padding-bottom pb-lg-half bg_img pos-rel" 
         id="pricing"
@@ -432,121 +469,130 @@ export default function DownloadPage() {
             <p>{settings.pricing.description}</p>
           </div>
 
-          {/* Grid Layout */}
-          <div className="ugeen-pricing-grid-v6">
+          {/* 4-Plan Responsive Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-4 mt-12">
+            {settings.pricing.plans.map((plan, index) => {
+              const waNumber = settings.whatsappNumber || '213XXXXXXXXX';
+              const textMessage = `مرحباً ZINOU TV، أود الاشتراك في ${plan.title} (بسعر ${plan.priceInfo})`;
+              const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(textMessage)}`;
+              const isPopular = plan.popular || false;
+
+              return (
+                <div 
+                  key={index} 
+                  className={`ugeen-plan-card relative flex flex-col justify-between transition-all duration-300 transform hover:-translate-y-1 ${
+                    isPopular ? 'border border-[#d4af37] shadow-[0_15px_45px_rgba(212,175,55,0.15)] scale-[1.02] md:scale-[1.03]' : 'border border-slate-800'
+                  }`}
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(22, 18, 10, 0.95), rgba(9, 8, 5, 0.98))',
+                    borderRadius: '24px',
+                    padding: '36px 28px',
+                    minHeight: 'auto',
+                  }}
+                >
+                  {isPopular && (
+                    <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-yellow-600 text-black text-[10px] font-black px-3.5 py-1 rounded-full shadow-lg">
+                      ★ الأكثر شعبية
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="mb-6">
+                      <h5 className="text-xl font-black text-slate-100 mb-1">{plan.title}</h5>
+                      <p className="text-xs text-amber-500 font-bold tracking-wide">{plan.kicker}</p>
+                    </div>
+
+                    <div className="mb-6 pb-6 border-b border-slate-850">
+                      <h2 className="text-3xl font-black text-white flex items-baseline gap-1.5">
+                        <span className="text-sm font-bold text-amber-500">DZD</span>
+                        {plan.price}
+                      </h2>
+                    </div>
+
+                    <ul className="space-y-3.5 mb-8">
+                      {plan.features.map((item, fidx) => (
+                        <li key={fidx} className="flex items-start gap-2.5 text-xs text-slate-300 font-medium leading-relaxed">
+                          <span className="text-amber-500 font-bold text-sm leading-none">✓</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <a 
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-full py-4 rounded-xl font-black text-xs text-center flex items-center justify-center gap-2 transition-all duration-300 ${
+                      isPopular 
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black shadow-lg shadow-amber-500/25' 
+                        : 'bg-[#1b233a] hover:bg-[#25304e] text-white border border-[#2d3a5f]/50'
+                    }`}
+                  >
+                    <span>شراء واشتراك عبر واتساب</span>
+                    <i className="fab fa-whatsapp text-sm"></i>
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* Relocated Visitor Activation Section */}
+      <section 
+        className="visitor-activation-section padding-top padding-bottom pb-lg-half pos-rel"
+        style={{ backgroundColor: '#070a18', borderTop: '1px solid rgba(212,175,55,0.06)' }}
+      >
+        <div className="container">
+          <div className="max-w-lg mx-auto bg-[#0d1124] border border-slate-800/80 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+            <div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl pointer-events-none" />
             
-            {/* Card 1: Members (الأعضاء) */}
-            {membersPlan && (
-              <div className="ugeen-plan-card ugeen-plan-member">
-                <div className="ugeen-plan-top">
-                  <div>
-                    <h5 className="cate">{membersPlan.title}</h5>
-                    <p className="ugeen-plan-kicker">{membersPlan.kicker}</p>
-                  </div>
-                  <div className="ugeen-plan-visual member-media-stage" aria-hidden="true">
-                    <div className="member-devices">
-                      <span className="member-monitor"></span>
-                      <span className="member-tablet"></span>
-                      <span className="member-phone"></span>
-                    </div>
-                    <span className="member-shield"></span>
-                  </div>
-                </div>
+            <div className="text-center mb-8">
+              <span className="text-xs font-black text-amber-500 tracking-widest uppercase bg-amber-950/40 border border-amber-900/30 px-3.5 py-1 rounded-full">تفعيل مجاني</span>
+              <h3 className="text-2xl font-black text-white mt-4 mb-2">بوابة تفعيل كود الزائر</h3>
+              <p className="text-slate-400 text-xs font-medium">أدخل كود التفعيل الممنوح لك للاستفادة من البث التجريبي لمدة 24 ساعة</p>
+            </div>
 
-                <div className="ugeen-plan-price">
-                  <h2 className="title"><sup>$</sup>{membersPlan.price}</h2>
-                  <span className="info">{membersPlan.priceInfo}</span>
-                </div>
-
-                <ul className="pricing-content-3">
-                  {membersPlan.features.map((item, fidx) => (
-                    <li key={fidx}>{item}</li>
-                  ))}
-                </ul>
-
-                <div className="trial-button ugeen-member-actions">
-                  <Link href="/signup" className="transparent-button">
-                    <span>حساب جديد</span>
-                    <i className="fas fa-arrow-left"></i>
-                  </Link>
-                  <Link href="/signin" className="transparent-button">
-                    <span>تسجيل الدخول</span>
-                    <i className="fas fa-arrow-left"></i>
-                  </Link>
-                </div>
+            <form onSubmit={handleActivation} autoComplete="off" className="space-y-5">
+              <div>
+                <label className="block text-xs text-slate-400 mb-2 font-bold" htmlFor="code">أدخل كود التفعيل</label>
+                <input
+                  type="text"
+                  id="code"
+                  placeholder="أدخل كود التفعيل هنا"
+                  value={activationCode}
+                  onChange={(e) => setActivationCode(e.target.value)}
+                  className="w-full px-4 py-3 bg.95 bg-[#070b1e] border border-slate-700 focus:border-amber-500 rounded-xl focus:outline-none text-xs text-center font-mono placeholder:font-sans"
+                  required
+                />
               </div>
-            )}
 
-            {/* Card 2: Visitors (الزوار) */}
-            {visitorsPlan && (
-              <div className="ugeen-plan-card ugeen-plan-visitor">
-                <div className="ugeen-plan-top">
-                  <div>
-                    <h5 className="cate">{visitorsPlan.title}</h5>
-                    <p className="ugeen-plan-kicker">{visitorsPlan.kicker}</p>
-                  </div>
-                  <div className="ugeen-plan-visual visitor-media-stage" aria-hidden="true">
-                    <div className="visitor-screen">
-                      <span className="visitor-play"></span>
-                    </div>
-                    <div className="visitor-pass">
-                      <strong>FREE</strong>
-                      <small>ACCESS</small>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="ugeen-plan-price">
-                  <h2 className="title"><sup>$</sup>{visitorsPlan.price}</h2>
-                  <span className="info">{visitorsPlan.priceInfo}</span>
-                </div>
-
-                <ul className="pricing-content-3">
-                  {visitorsPlan.features.map((item, fidx) => (
-                    <li key={fidx}>{item}</li>
-                  ))}
-                </ul>
-
-                {/* Visitor Activation Form */}
-                <div className="card-btn ugeen-visitor-form">
-                  <form onSubmit={handleActivation} autoComplete="off">
-                    <label className="ugeen-field-label" htmlFor="code">أدخل كود التفعيل</label>
-                    <input
-                      type="text"
-                      id="code"
-                      placeholder="أدخل كود التفعيل هنا"
-                      value={activationCode}
-                      onChange={(e) => setActivationCode(e.target.value)}
-                      className="form-control mb-2"
-                      required
-                    />
-                    
-                    <label className="ugeen-field-label" htmlFor="select">اختر الباقة</label>
-                    <select
-                      id="select"
-                      value={selectedPackage}
-                      onChange={(e) => setSelectedPackage(e.target.value)}
-                      className="form-control form-select mb-2"
-                    >
-                      <option value="all">باقة جميع القنوات</option>
-                      <option value="sports">باقة القنوات الرياضية</option>
-                      <option value="worldcup">باقة كأس العالم</option>
-                    </select>
-
-                    <button
-                      type="submit"
-                      id="snd"
-                      className="get-button"
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                    >
-                      <span>تفــعيل</span>
-                      <i className="fas fa-arrow-left"></i>
-                    </button>
-                  </form>
-                </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-2 font-bold" htmlFor="select">اختر الباقة</label>
+                <select
+                  id="select"
+                  value={selectedPackage}
+                  onChange={(e) => setSelectedPackage(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 focus:border-amber-500 rounded-xl focus:outline-none text-xs text-right text-white"
+                >
+                  <option value="all">باقة جميع القنوات</option>
+                  <option value="sports">باقة القنوات الرياضية</option>
+                  <option value="worldcup">باقة كأس العالم</option>
+                </select>
               </div>
-            )}
 
+              <button
+                type="submit"
+                id="snd"
+                className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-black font-black rounded-xl shadow-lg shadow-amber-500/20 transition-all flex items-center justify-between px-6"
+              >
+                <span>تفعيــل كود الزائر</span>
+                <i className="fas fa-arrow-left"></i>
+              </button>
+            </form>
           </div>
         </div>
       </section>
@@ -559,7 +605,7 @@ export default function DownloadPage() {
           <div className="ugeen-faq-head">
             <span className="ugeen-faq-kicker">FAQ</span>
             <h2 className="ugeen-faq-title">أسئلة شائعة</h2>
-            <p className="ugeen-faq-subtitle">إجابات سريعة على أكثر الأسئلة التي يحتاجها مستخدمو UGEEN TV.</p>
+            <p className="ugeen-faq-subtitle">إجابات سريعة على أكثر الأسئلة التي يحتاجها مستخدمو ZINOU TV.</p>
           </div>
 
           {/* Accordion Grid */}
@@ -588,7 +634,7 @@ export default function DownloadPage() {
                 <div className="ugeen-faq-answer">
                   {item.a}
                   {item.link && (
-                    <a href={item.link} download className="text-cyan-400 hover:underline mr-1 block mt-2">
+                    <a href={item.link} download className="text-amber-500 hover:underline mr-1 block mt-2">
                       انقر هنا وحمل تطبيق الـ APK الآن <i className="fas fa-link"></i>
                     </a>
                   )}
@@ -599,7 +645,7 @@ export default function DownloadPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section (Refactored to download APK directly) */}
       <section className="trial-section ugeen-modern-trial padding-bottom padding-top">
         <div className="container">
           <div className="ugeen-cta-wrapper">
@@ -609,20 +655,20 @@ export default function DownloadPage() {
                 حان وقت <span>الاستمتاع بالمشاهدة!</span>
               </h3>
               <p className="ugeen-cta-desc">
-                قم بالحصول على اشتراكك المجاني الان واستمتع بعالم من الترفيه.
+                قم بتحميل تطبيقنا الآن واستمتع بعالم من الترفيه والمشاهدة الحية.
               </p>
             </div>
 
             <div className="ugeen-cta-actions">
               <div className="trial-button">
-                <Link href="/signup" className="transparent-button">
-                  <span>حساب جديد</span>
-                  <i className="fas fa-arrow-left"></i>
-                </Link>
-                <Link href="/signin" className="transparent-button">
-                  <span>تسجيل الدخول</span>
-                  <i className="fas fa-arrow-left"></i>
-                </Link>
+                <a 
+                  href="/zinou-tv.apk" 
+                  download="Zinou-TV.apk"
+                  className="transparent-button flex items-center justify-center gap-2.5 px-6"
+                >
+                  <span>تحميل التطبيق</span>
+                  <i className="fas fa-download text-sm"></i>
+                </a>
               </div>
             </div>
           </div>
@@ -635,9 +681,9 @@ export default function DownloadPage() {
           <div className="ugeen-footer-panel">
             <div className="ugeen-footer-main">
               <div className="ugeen-footer-brand">
-                <Link href="/" className="ugeen-footer-logo" aria-label="UGEEN TV">
-                  <span className="ugeen-footer-mark" aria-hidden="true"></span>
-                  <span>UGEEN</span>
+                <Link href="/" className="ugeen-footer-logo" aria-label="ZINOU TV">
+                  <span className="ugeen-footer-mark bg-amber-500" aria-hidden="true"></span>
+                  <span>ZINOU TV</span>
                 </Link>
                 <p className="ugeen-footer-text">
                   منصة متكاملة لمشاهدة أحدث الأفلام والمسلسلات بجودة عالية وتجربة فريدة لك.
@@ -673,23 +719,23 @@ export default function DownloadPage() {
                 </ul>
                 
                 <ul className="ugeen-footer-social">
-                  <li className="twitter">
-                    <a href="#0" aria-label="Twitter">
-                      <i className="fab fa-twitter"></i>
-                    </a>
-                  </li>
                   <li className="facebook">
-                    <a href="#0" aria-label="Facebook">
+                    <a href={settings.socials?.facebook || "#0"} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                       <i className="fab fa-facebook-f"></i>
                     </a>
                   </li>
+                  <li className="twitter">
+                    <a href={settings.socials?.twitter || "#0"} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+                      <i className="fab fa-twitter"></i>
+                    </a>
+                  </li>
                   <li className="instagram">
-                    <a href="#0" aria-label="Instagram">
+                    <a href={settings.socials?.instagram || "#0"} target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                       <i className="fab fa-instagram"></i>
                     </a>
                   </li>
                   <li className="youtube">
-                    <a href="#0" aria-label="YouTube">
+                    <a href={settings.socials?.youtube || "#0"} target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                       <i className="fab fa-youtube"></i>
                     </a>
                   </li>
@@ -698,7 +744,7 @@ export default function DownloadPage() {
             </div>
 
             <div className="ugeen-footer-copy">
-              <p>جميع الحقوق محفوظة 2026 © <a href="#0">UGEEN TV</a></p>
+              <p>جميع الحقوق محفوظة 2026 © <a href="#0">ZINOU TV</a></p>
             </div>
           </div>
         </div>
@@ -707,11 +753,11 @@ export default function DownloadPage() {
       {/* ACTIVATION MODAL (INTERACTIVE USER EXPERINCE) */}
       {showModal && (
         <div className="ugeen-guest-modal-overlay">
-          <div className="ugeen-guest-modal-content">
+          <div className="ugeen-guest-modal-content border border-[#d4af37]/30">
             
             {/* Modal Header */}
-            <div className="ugeen-guest-modal-header">
-              <h3 className="ugeen-guest-modal-title">تفعيل كود الزائر</h3>
+            <div className="ugeen-guest-modal-header border-b border-slate-800">
+              <h3 className="ugeen-guest-modal-title text-amber-500">تفعيل كود الزائر</h3>
               <button
                 onClick={closeModal}
                 className="ugeen-guest-modal-close"
@@ -724,7 +770,7 @@ export default function DownloadPage() {
             <div className="ugeen-guest-modal-body">
               {isActivating ? (
                 <div className="ugeen-guest-loading-card">
-                  <div className="ugeen-guest-loader-ring" />
+                  <div className="w-12 h-12 rounded-full border-4 border-amber-500 border-t-transparent animate-spin mb-4" />
                   <h3>جاري الاتصال بالسيرفر وتوليد الكود...</h3>
                   <p>يرجى الانتظار، جاري تفعيل كود الزائر الخاص بك.</p>
                 </div>
@@ -732,7 +778,7 @@ export default function DownloadPage() {
                 <div>
                   {/* Success Header */}
                   <div className="ugeen-guest-success-head">
-                    <div className="ugeen-guest-success-icon">
+                    <div className="ugeen-guest-success-icon bg-amber-500 text-black text-2xl font-black flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-3">
                       ✓
                     </div>
                     <h3>تم تفعيل كود الزائر بنجاح!</h3>
@@ -748,7 +794,7 @@ export default function DownloadPage() {
                       <span className="ugeen-guest-value select-all">{settings.activationModal.hostUrl}</span>
                       <button
                         onClick={() => handleCopy(settings.activationModal.hostUrl, 'host')}
-                        className="ugeen-guest-copy"
+                        className="ugeen-guest-copy hover:text-amber-500"
                       >
                         {copiedKey === 'host' ? 'تم النسخ!' : 'نسخ'}
                       </button>
@@ -760,7 +806,7 @@ export default function DownloadPage() {
                       <span className="ugeen-guest-value select-all">{settings.activationModal.username}</span>
                       <button
                         onClick={() => handleCopy(settings.activationModal.username, 'user')}
-                        className="ugeen-guest-copy"
+                        className="ugeen-guest-copy hover:text-amber-500"
                       >
                         {copiedKey === 'user' ? 'تم النسخ!' : 'نسخ'}
                       </button>
@@ -772,7 +818,7 @@ export default function DownloadPage() {
                       <span className="ugeen-guest-value select-all">{settings.activationModal.password}</span>
                       <button
                         onClick={() => handleCopy(settings.activationModal.password, 'pass')}
-                        className="ugeen-guest-copy"
+                        className="ugeen-guest-copy hover:text-amber-500"
                       >
                         {copiedKey === 'pass' ? 'تم النسخ!' : 'نسخ'}
                       </button>
@@ -786,14 +832,14 @@ export default function DownloadPage() {
                           href={settings.activationModal.m3uUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="ugeen-guest-m3u"
+                          className="ugeen-guest-m3u text-amber-500 hover:underline"
                         >
                           تحميل ملف القنوات M3U
                         </a>
                       </span>
                       <button
                         onClick={() => handleCopy(settings.activationModal.m3uUrl, 'm3u')}
-                        className="ugeen-guest-copy"
+                        className="ugeen-guest-copy hover:text-amber-500"
                       >
                         {copiedKey === 'm3u' ? 'تم النسخ!' : 'نسخ'}
                       </button>
@@ -803,7 +849,7 @@ export default function DownloadPage() {
                   {/* Close button */}
                   <button
                     onClick={closeModal}
-                    className="ugeen-guest-close-btn"
+                    className="ugeen-guest-close-btn bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black hover:from-amber-400 hover:to-yellow-400"
                   >
                     إغلاق وبدء المشاهدة
                   </button>

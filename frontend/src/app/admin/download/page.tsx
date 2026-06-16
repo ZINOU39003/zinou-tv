@@ -8,6 +8,7 @@ interface Plan {
   kicker: string;
   price: string;
   priceInfo: string;
+  popular?: boolean;
   features: string[];
 }
 
@@ -36,6 +37,13 @@ interface Settings {
     downloadBtnText: string;
   };
   sponsorsText: string;
+  whatsappNumber: string;
+  socials: {
+    twitter: string;
+    facebook: string;
+    instagram: string;
+    youtube: string;
+  };
   features: Feature[];
   pricing: {
     title: string;
@@ -67,7 +75,7 @@ export default function AdminDownloadPage() {
 
   // Verify auth on mount
   useEffect(() => {
-    const savedPasscode = localStorage.getItem('ugeen_admin_passcode');
+    const savedPasscode = localStorage.getItem('zinou_admin_passcode');
     if (savedPasscode) {
       setPasscode(savedPasscode);
       fetchSettings(savedPasscode);
@@ -84,11 +92,11 @@ export default function AdminDownloadPage() {
       const data = await res.json();
       setSettings(data);
       setIsAuthenticated(true);
-      localStorage.setItem('ugeen_admin_passcode', code);
+      localStorage.setItem('zinou_admin_passcode', code);
       setLoginError('');
     } catch (err) {
       setLoginError('خطأ أثناء تحميل البيانات من الخادم.');
-      localStorage.removeItem('ugeen_admin_passcode');
+      localStorage.removeItem('zinou_admin_passcode');
     } finally {
       setLoading(false);
     }
@@ -100,25 +108,18 @@ export default function AdminDownloadPage() {
       setLoginError('الرجاء إدخال رمز المرور.');
       return;
     }
-    // Test auth by attempting to save or fetch using credentials
-    // The settings GET is public, but let's confirm the passcode works on write
-    // For simplicity, let's attempt to fetch settings and set auth state
     verifyPasscode(passcode);
   };
 
   const verifyPasscode = async (code: string) => {
     try {
       setLoading(true);
-      // We will perform a test POST or check against local endpoint
-      // GET is public but we can fetch anyway
       const res = await fetch('/api-admin/settings');
       if (res.ok) {
-        // Passcode accepted client-side (will be validated server-side on POST)
-        // We will assume it works if we can parse settings
         const data = await res.json();
         setSettings(data);
         setIsAuthenticated(true);
-        localStorage.setItem('ugeen_admin_passcode', code);
+        localStorage.setItem('zinou_admin_passcode', code);
         setLoginError('');
       } else {
         setLoginError('رمز المرور غير صحيح.');
@@ -131,7 +132,7 @@ export default function AdminDownloadPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('ugeen_admin_passcode');
+    localStorage.removeItem('zinou_admin_passcode');
     setIsAuthenticated(false);
     setPasscode('');
     setSettings(null);
@@ -309,7 +310,7 @@ export default function AdminDownloadPage() {
         <div className="w-full max-w-md bg-[#0f1530] border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-black bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent mb-2">
-              لوحة التحكم لـ UGEEN
+              لوحة التحكم لـ ZINOU TV
             </h1>
             <p className="text-slate-400 text-sm">أدخل رمز المرور للوصول لإعدادات صفحة التحميل</p>
           </div>
@@ -362,7 +363,7 @@ export default function AdminDownloadPage() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold bg-gradient-to-l from-white to-cyan-400 bg-clip-text text-transparent">
-            لوحة إدارة صفحة التحميل
+            لوحة إدارة صفحة التحميل (ZINOU TV)
           </h1>
           <p className="text-slate-400 text-sm mt-1">تعديل نصوص، صور، أسئلة شائعة، وملف الـ APK لصفحة التحميل</p>
         </div>
@@ -562,6 +563,77 @@ export default function AdminDownloadPage() {
                   />
                 </div>
               </div>
+
+              <div className="pt-4 border-t border-slate-800">
+                <h3 className="text-lg font-bold mb-4 text-cyan-400">رقم الهاتف وتواصل واتساب (WhatsApp Purchase)</h3>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-2 font-bold">رقم الواتساب لاستلام طلبات الاشتراك (مع رمز الدولة، مثال: 213XXXXXXXXX)</label>
+                  <input
+                    type="text"
+                    value={settings.whatsappNumber || ''}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      whatsappNumber: e.target.value
+                    })}
+                    className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 rounded-xl focus:outline-none focus:border-cyan-500 text-sm font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-800">
+                <h3 className="text-lg font-bold mb-4 text-cyan-400">روابط مواقع التواصل الاجتماعي (Social Media)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-2 font-bold">رابط فيسبوك (Facebook)</label>
+                    <input
+                      type="text"
+                      value={settings.socials?.facebook || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        socials: { ...settings.socials, facebook: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 rounded-xl focus:outline-none focus:border-cyan-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-2 font-bold">رابط تويتر (Twitter)</label>
+                    <input
+                      type="text"
+                      value={settings.socials?.twitter || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        socials: { ...settings.socials, twitter: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 rounded-xl focus:outline-none focus:border-cyan-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-2 font-bold">رابط انستغرام (Instagram)</label>
+                    <input
+                      type="text"
+                      value={settings.socials?.instagram || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        socials: { ...settings.socials, instagram: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 rounded-xl focus:outline-none focus:border-cyan-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-2 font-bold">رابط يوتيوب (YouTube)</label>
+                    <input
+                      type="text"
+                      value={settings.socials?.youtube || ''}
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        socials: { ...settings.socials, youtube: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 bg-[#070b1e] border border-slate-700 rounded-xl focus:outline-none focus:border-cyan-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 
@@ -690,13 +762,18 @@ export default function AdminDownloadPage() {
                 />
               </div>
 
-              {/* Plans Editor */}
+              {/* Plans Editor (Dynamically edits 4 packages) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
                 {settings.pricing.plans.map((plan, planIdx) => (
-                  <div key={planIdx} className="p-5 bg-[#070b1e] border border-slate-800 rounded-2xl space-y-4">
-                    <span className="px-2.5 py-0.5 bg-indigo-950/60 border border-indigo-900 text-indigo-400 text-xs font-bold rounded-md">
-                      خطة: {plan.title}
-                    </span>
+                  <div key={planIdx} className={`p-5 bg-[#070b1e] border rounded-2xl space-y-4 ${plan.popular ? 'border-[#d4af37]' : 'border-slate-800'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-0.5 bg-indigo-950/60 border border-indigo-900 text-indigo-400 text-xs font-bold rounded-md">
+                        خطة: {plan.title}
+                      </span>
+                      {plan.popular && (
+                        <span className="text-[10px] text-[#d4af37] font-black">★ الأكثر شعبية</span>
+                      )}
+                    </div>
 
                     <div>
                       <label className="block text-[10px] text-slate-400 mb-1">اسم الخطة</label>
@@ -728,7 +805,7 @@ export default function AdminDownloadPage() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[10px] text-slate-400 mb-1">السعر ($)</label>
+                        <label className="block text-[10px] text-slate-400 mb-1">السعر (دج)</label>
                         <input
                           type="text"
                           value={plan.price}
@@ -737,11 +814,11 @@ export default function AdminDownloadPage() {
                             updated[planIdx].price = e.target.value;
                             setSettings({ ...settings, pricing: { ...settings.pricing, plans: updated } });
                           }}
-                          className="w-full px-3 py-2 bg-[#0f1530] border border-slate-700 rounded-xl text-sm"
+                          className="w-full px-3 py-2 bg-[#0f1530] border border-slate-700 rounded-xl text-sm font-mono"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-slate-400 mb-1">معلومات السعر</label>
+                        <label className="block text-[10px] text-slate-400 mb-1">معلومات السعر (مثل: DZD 500)</label>
                         <input
                           type="text"
                           value={plan.priceInfo}
@@ -750,13 +827,34 @@ export default function AdminDownloadPage() {
                             updated[planIdx].priceInfo = e.target.value;
                             setSettings({ ...settings, pricing: { ...settings.pricing, plans: updated } });
                           }}
-                          className="w-full px-3 py-2 bg-[#0f1530] border border-slate-700 rounded-xl text-sm"
+                          className="w-full px-3 py-2 bg-[#0f1530] border border-slate-700 rounded-xl text-sm font-mono"
                         />
                       </div>
                     </div>
 
+                    <div className="flex items-center gap-2 pt-2 border-t border-slate-800/40">
+                      <input
+                        type="checkbox"
+                        id={`plan-popular-${planIdx}`}
+                        checked={plan.popular || false}
+                        onChange={(e) => {
+                          const updated = [...settings.pricing.plans];
+                          if (e.target.checked) {
+                            updated.forEach((p, idx) => {
+                              p.popular = idx === planIdx;
+                            });
+                          } else {
+                            updated[planIdx].popular = false;
+                          }
+                          setSettings({ ...settings, pricing: { ...settings.pricing, plans: updated } });
+                        }}
+                        className="rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 cursor-pointer w-4 h-4"
+                      />
+                      <label htmlFor={`plan-popular-${planIdx}`} className="text-xs text-slate-300 cursor-pointer select-none">الباقة الأكثر شعبية (إطار وتوهج ذهبي)</label>
+                    </div>
+
                     {/* Features list checklist */}
-                    <div>
+                    <div className="pt-2 border-t border-slate-800/45">
                       <label className="block text-[10px] text-slate-400 mb-2 font-bold">قائمة المميزات</label>
                       <div className="space-y-2">
                         {plan.features.map((feature, featureIdx) => (

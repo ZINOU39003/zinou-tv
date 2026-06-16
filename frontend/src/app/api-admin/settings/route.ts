@@ -10,6 +10,8 @@ function checkAuth(req: NextRequest): boolean {
   return passcode === DEFAULT_PASSCODE;
 }
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   try {
     if (!fs.existsSync(SETTINGS_PATH)) {
@@ -17,7 +19,13 @@ export async function GET(req: NextRequest) {
     }
     const fileContent = fs.readFileSync(SETTINGS_PATH, 'utf-8');
     const settings = JSON.parse(fileContent);
-    return NextResponse.json(settings);
+    return NextResponse.json(settings, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      }
+    });
   } catch (error: any) {
     return NextResponse.json({ error: 'Failed to read settings: ' + error.message }, { status: 500 });
   }
