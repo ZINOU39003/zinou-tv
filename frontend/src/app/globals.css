@@ -2073,6 +2073,9 @@ body.light .skeleton {
 /* Gold theme logo text */
 .ugeen-home-logo-text {
   background: linear-gradient(90deg, #ffffff 0%, #fff2cc 38%, #f1c232 62%, #bf9000 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
   text-shadow: 0 0 18px rgba(241, 194, 50, 0.75), 0 0 34px rgba(191, 144, 0, 0.28) !important;
   filter: drop-shadow(0 0 12px rgba(241, 194, 50, 0.25)) !important;
 }
@@ -2112,6 +2115,9 @@ body.light .skeleton {
 /* Hero title & players wrap */
 .banner-content-14 .ugeen-title-gradient {
   background: linear-gradient(90deg, #ffffff 0%, #fff2cc 28%, #f1c232 55%, #e69138 84%, #b45f06 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
   text-shadow: 0 0 24px rgba(241, 194, 50, 0.32), 0 0 46px rgba(191, 144, 0, 0.24) !important;
   filter: drop-shadow(0 0 14px rgba(241, 194, 50, 0.24)) !important;
 }
