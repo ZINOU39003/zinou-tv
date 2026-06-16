@@ -19,6 +19,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
+    const verify = req.nextUrl.searchParams.get('verify') === 'true';
+    if (verify) {
+      if (!checkAuth(req)) {
+        return NextResponse.json({ error: 'رمز المرور غير صحيح' }, { status: 401 });
+      }
+      return NextResponse.json({ success: true });
+    }
+
     if (!fs.existsSync(SETTINGS_PATH)) {
       return NextResponse.json({ error: 'Settings file not found' }, { status: 404 });
     }

@@ -87,16 +87,25 @@ export default function AdminDownloadPage() {
   const fetchSettings = async (code: string) => {
     try {
       setLoading(true);
-      const res = await fetch('/api-admin/settings');
-      if (!res.ok) throw new Error('فشل جلب البيانات');
-      const data = await res.json();
+      const res = await fetch('/api-admin/settings?verify=true', {
+        headers: {
+          'x-admin-passcode': encodeURIComponent(code),
+        }
+      });
+      if (!res.ok) throw new Error('رمز مرور غير صحيح');
+      
+      const settingsRes = await fetch('/api-admin/settings');
+      if (!settingsRes.ok) throw new Error('فشل جلب البيانات');
+      const data = await settingsRes.json();
+      
       setSettings(data);
       setIsAuthenticated(true);
       localStorage.setItem('zinou_admin_passcode', code);
       setLoginError('');
     } catch (err) {
-      setLoginError('خطأ أثناء تحميل البيانات من الخادم.');
+      setLoginError('رمز المرور غير صحيح.');
       localStorage.removeItem('zinou_admin_passcode');
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
     }
@@ -114,9 +123,15 @@ export default function AdminDownloadPage() {
   const verifyPasscode = async (code: string) => {
     try {
       setLoading(true);
-      const res = await fetch('/api-admin/settings');
+      const res = await fetch('/api-admin/settings?verify=true', {
+        headers: {
+          'x-admin-passcode': encodeURIComponent(code),
+        }
+      });
       if (res.ok) {
-        const data = await res.json();
+        const settingsRes = await fetch('/api-admin/settings');
+        if (!settingsRes.ok) throw new Error('فشل جلب البيانات');
+        const data = await settingsRes.json();
         setSettings(data);
         setIsAuthenticated(true);
         localStorage.setItem('zinou_admin_passcode', code);
@@ -125,7 +140,7 @@ export default function AdminDownloadPage() {
         setLoginError('رمز المرور غير صحيح.');
       }
     } catch (err) {
-      setLoginError('حدث خطأ في الشبكة.');
+      setLoginError('رمز المرور غير صحيح أو حدث خطأ في الشبكة.');
     } finally {
       setLoading(false);
     }
