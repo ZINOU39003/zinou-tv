@@ -6,10 +6,10 @@
     "description": "استمتع بمشاهدة آلاف القنوات والأفلام والمسلسلات بجودة عالية وبدون تقطيع.",
     "backgroundImage": "/assets/images/banner/zinou-banner-bg.png",
     "playersImage": "/assets/images/banner/zinou-home-players.png",
-    "downloadBtnText": "تحميل كود الزائر"
+    "downloadBtnText": "تحميل التطبيق"
   },
   "sponsorsText": "يمكنك الاستمتاع بجميع الباقات مجانًا",
-  "whatsappNumber": "213XXXXXXXXX",
+  "whatsappNumber": "0697148209",
   "socials": {
     "twitter": "#0",
     "facebook": "#0",
@@ -21,19 +21,19 @@
       "kicker": "وداعًا للتقطعات .",
       "title": "جودات متنوعة !",
       "description": "جميع الجودات متوفرة لدينا { 4K 2160p-1080p-720p-480p-360p-240p-144p } لذا لا تقلق ، فلن تعاني من انقطاع في المشاهدة بسبب ضعف الانترنت ^^",
-      "image": "/assets/images/feature/ugeen-feature-quality.png"
+      "image": "/assets/images/feature/image2.png"
     },
     {
       "kicker": "شاهد عبر كل الاجهزة",
       "title": "خدماتنا تدعم مختلف الاجهزة",
       "description": "يمكنك الاستفادة من خدماتنا والاستمتاع بالمشاهدة المباشرة على اي جهاز بالعالم يدعم نظام TV - كما ان خدماتنا تتميز بمعدل عمل ثابت يصل الى 99%",
-      "image": "/assets/images/feature/ugeen-feature-devices.png"
+      "image": "/assets/images/feature/image3.png"
     },
     {
       "kicker": "لا تفوتك مباراة !",
       "title": "شاهد اينما كنت",
       "description": "يمكنك استخدام خدماتنا من أي مكان في هذا العالم. لا توجد قيود جغرافية، يمكنك بدء المشاهدة في أي وقت تريده على مدار الساعة وطوال أيام الأسبوع!",
-      "image": "/assets/images/feature/ugeen-feature-anywhere.png"
+      "image": "/assets/images/feature/image4.png"
     }
   ],
   "pricing": {
