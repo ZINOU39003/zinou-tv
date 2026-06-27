@@ -37,8 +37,11 @@ class OneSignalService
             'included_segments' => ['All'],
             'headings' => ['en' => $title, 'ar' => $title],
             'contents' => ['en' => $message, 'ar' => $message],
-            'data' => $data,
         ];
+
+        if (!empty($data)) {
+            $payload['data'] = $data;
+        }
 
         try {
             $response = Http::withHeaders([
@@ -51,6 +54,51 @@ class OneSignalService
                 return true;
             } else {
                 Log::error('OneSignal notification failed: ' . $response->body());
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error('OneSignal Exception: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send a custom notification with optional image.
+     */
+    public function sendCustomNotification($title, $message, $imageUrl = null, $data = [])
+    {
+        if (empty($this->restApiKey)) {
+            Log::warning('OneSignal API Key is empty. Cannot send notification: ' . $title);
+            return false;
+        }
+
+        $payload = [
+            'app_id' => $this->appId,
+            'included_segments' => ['All'],
+            'headings' => ['en' => $title, 'ar' => $title],
+            'contents' => ['en' => $message, 'ar' => $message],
+        ];
+
+        if (!empty($data)) {
+            $payload['data'] = $data;
+        }
+
+        if (!empty($imageUrl)) {
+            $payload['big_picture'] = $imageUrl;
+            $payload['ios_attachments'] = ['id1' => $imageUrl];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Basic ' . $this->restApiKey,
+                'Content-Type' => 'application/json; charset=utf-8',
+            ])->post('https://onesignal.com/api/v1/notifications', $payload);
+
+            if ($response->successful()) {
+                Log::info('Custom OneSignal notification sent successfully: ' . $title);
+                return true;
+            } else {
+                Log::error('Custom OneSignal notification failed: ' . $response->body());
                 return false;
             }
         } catch (\Exception $e) {
