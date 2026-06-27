@@ -30,6 +30,9 @@ Route::middleware(['api.key', 'security.headers'])->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/license/validate', [LicenseController::class, 'validateLicense']);
         Route::get('/subscription', [SubscriptionController::class, 'show']);
+        
+        // Admin routes
+        Route::post('/admin/notifications/send', [\App\Http\Controllers\AdminNotificationController::class, 'send']);
     });
 
     // Public IPTV Content routes (Only requires X-API-Key verification)
