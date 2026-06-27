@@ -8,7 +8,7 @@ export default function Providers() {
 
   const fetchProviders = async () => {
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
       const res = await fetch(`${baseUrl}/api/providers`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('zinou_token')}` }
       });
@@ -34,7 +34,7 @@ export default function Providers() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
       const res = await fetch(`${baseUrl}/api/providers`, {
         method: 'POST',
         headers: { 
@@ -61,7 +61,7 @@ export default function Providers() {
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure?')) return;
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
       await fetch(`${baseUrl}/api/providers/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('zinou_token')}` }
@@ -81,7 +81,7 @@ export default function Providers() {
     // Fallback to server sync for m3u for now
     if (p.type === 'm3u') {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+        const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
         const res = await fetch(`${baseUrl}/api/providers/${id}/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('zinou_token')}` }
@@ -102,7 +102,7 @@ export default function Providers() {
 
     // Client-side Sync for Xtream
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
       const token = localStorage.getItem('zinou_token');
       
       alert('Starting Client-Side Sync! Please do not close the window...');
@@ -119,9 +119,12 @@ export default function Providers() {
       });
       if (!initRes.ok) throw new Error('Failed to initialize sync on server');
 
-      // 2. Fetch Live Categories
+      // 1. Fetch Live Categories
       const liveCatRes = await fetch(`${baseXtream}&action=get_live_categories`);
       const liveCats = await liveCatRes.json();
+      if (!Array.isArray(liveCats)) {
+        throw new Error('XTREAM API did not return an array for live categories. It might be rate limiting you. Please wait a few minutes and try again. Response: ' + JSON.stringify(liveCats).substring(0, 100));
+      }
       
       // 3. Fetch VOD Categories
       const vodCatRes = await fetch(`${baseXtream}&action=get_vod_categories`);
@@ -141,6 +144,9 @@ export default function Providers() {
       // 4. Fetch Live Streams
       const liveRes = await fetch(`${baseXtream}&action=get_live_streams`);
       const liveStreams = await liveRes.json();
+      if (!Array.isArray(liveStreams)) {
+        throw new Error('XTREAM API did not return an array for live streams. Please wait a few minutes. Response: ' + JSON.stringify(liveStreams).substring(0, 100));
+      }
       
       const formattedChannels = [];
       if (Array.isArray(liveStreams)) {
@@ -151,13 +157,16 @@ export default function Providers() {
             name: s.name || 'Unknown',
             streamId: s.stream_id?.toString() || '0',
             streamIcon: s.stream_icon || '',
-            epgChannelId: s.epg_channel_id || ''
+            epgChannelId: s.epg_channel_id || '',
+            streamBaseUrl: url,
+            username: user,
+            password: pass
           });
         });
       }
 
-      // Chunk and send channels (500 at a time)
-      const CHUNK_SIZE = 500;
+      // Chunk and send channels (50 at a time to prevent Cloudflare Worker subrequest limits)
+      const CHUNK_SIZE = 50;
       for (let i = 0; i < formattedChannels.length; i += CHUNK_SIZE) {
         const chunk = formattedChannels.slice(i, i + CHUNK_SIZE);
         await fetch(`${baseUrl}/api/providers/${id}/sync-client/chunk`, {
@@ -170,6 +179,9 @@ export default function Providers() {
       // 5. Fetch VOD Streams
       const vodRes = await fetch(`${baseXtream}&action=get_vod_streams`);
       const vodStreams = await vodRes.json();
+      if (!Array.isArray(vodStreams)) {
+         throw new Error('XTREAM API did not return an array for VOD streams.');
+      }
       
       const formattedMovies = [];
       if (Array.isArray(vodStreams)) {
@@ -181,7 +193,11 @@ export default function Providers() {
             streamId: m.stream_id?.toString() || '0',
             streamIcon: m.stream_icon || '',
             rating: m.rating || '',
-            added: m.added || ''
+            added: m.added || '',
+            container_extension: m.container_extension || 'mp4',
+            streamBaseUrl: url,
+            username: user,
+            password: pass
           });
         });
       }

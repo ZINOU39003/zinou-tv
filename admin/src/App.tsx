@@ -33,7 +33,7 @@ function App() {
   const [stats, setStats] = useState({ channels: 0, providers: 0, users: 0, installs: 0, active_users: 0 });
   useEffect(() => {
     if (activeTab === 'dashboard' && token) {
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8787';
+      const baseUrl = import.meta.env.VITE_API_URL || 'https://api.zinou-tv.workers.dev';
       fetch(`${baseUrl}/api/dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
