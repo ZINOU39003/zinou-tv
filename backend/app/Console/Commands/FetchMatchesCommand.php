@@ -123,6 +123,84 @@ class FetchMatchesCommand extends Command
                     'lineups' => $lineups,
                 ];
 
+                // Check existing match state
+                $existingMatch = SportMatch::where('external_id', (string) $matchId)->first();
+                $notificationsState = $existingMatch && $existingMatch->notifications_state
+                    ? json_decode($existingMatch->notifications_state, true)
+                    : ['started' => false, 'ended' => false, 'home_score' => 0, 'away_score' => 0, 'lineups' => false, 'red_cards' => 0];
+
+                $oneSignal = app(\App\Services\OneSignalService::class);
+                $stateChanged = false;
+
+                // Only send notifications if it's today's match to avoid spamming past matches
+                $isToday = ($date === date('Ymd'));
+
+                if ($isToday) {
+                    // Event: Match Started
+                    if ($isLive && empty($notificationsState['started'])) {
+                        $oneSignal->sendToAll(
+                            "بداية المباراة ⚽",
+                            "المباراة بدأت الآن: {$homeName} ضد {$awayName}"
+                        );
+                        $notificationsState['started'] = true;
+                    }
+
+                    // Event: Goal Scored (Home)
+                    if ($isLive && $homeScore > ($notificationsState['home_score'] ?? 0)) {
+                        $oneSignal->sendToAll(
+                            "هدف جديد! ⚽",
+                            "{$homeName} يسجل! النتيجة الآن: {$homeName} {$homeScore} - {$awayScore} {$awayName}"
+                        );
+                        $notificationsState['home_score'] = $homeScore;
+                    }
+
+                    // Event: Goal Scored (Away)
+                    if ($isLive && $awayScore > ($notificationsState['away_score'] ?? 0)) {
+                        $oneSignal->sendToAll(
+                            "هدف جديد! ⚽",
+                            "{$awayName} يسجل! النتيجة الآن: {$homeName} {$homeScore} - {$awayScore} {$awayName}"
+                        );
+                        $notificationsState['away_score'] = $awayScore;
+                    }
+
+                    // Event: Lineups Available
+                    if (!empty($lineups) && empty($notificationsState['lineups'])) {
+                        $oneSignal->sendToAll(
+                            "التشكيلة الرسمية 📋",
+                            "التشكيلة الرسمية لمباراة {$homeName} ضد {$awayName} متاحة الآن!"
+                        );
+                        $notificationsState['lineups'] = true;
+                    }
+
+                    // Event: Red Cards
+                    $redCards = 0;
+                    if (!empty($stats)) {
+                        foreach ($stats as $teamStat) {
+                            foreach ($teamStat['statistics'] ?? [] as $stat) {
+                                if (($stat['name'] ?? '') === 'redCards') {
+                                    $redCards += (int) ($stat['displayValue'] ?? 0);
+                                }
+                            }
+                        }
+                    }
+                    if ($isLive && $redCards > ($notificationsState['red_cards'] ?? 0)) {
+                        $oneSignal->sendToAll(
+                            "بطاقة حمراء 🟥",
+                            "بطاقة حمراء في مباراة {$homeName} ضد {$awayName}!"
+                        );
+                        $notificationsState['red_cards'] = $redCards;
+                    }
+
+                    // Event: Match Ended
+                    if ($statusStr === 'post' && empty($notificationsState['ended']) && !empty($notificationsState['started'])) {
+                        $oneSignal->sendToAll(
+                            "نهاية المباراة 🏁",
+                            "انتهت المباراة: {$homeName} {$homeScore} - {$awayScore} {$awayName}"
+                        );
+                        $notificationsState['ended'] = true;
+                    }
+                }
+
                 SportMatch::updateOrCreate(
                     ['external_id' => (string) $matchId],
                     [
@@ -139,6 +217,7 @@ class FetchMatchesCommand extends Command
                         'is_world_cup' => ($leagueCode === 'fifa.world'),
                         'is_active' => true,
                         'match_details' => $matchDetails,
+                        'notifications_state' => json_encode($notificationsState),
                     ]
                 );
 
