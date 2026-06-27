@@ -29,11 +29,8 @@ class SplashViewModel @Inject constructor(
     private fun checkAppSecurity() {
         viewModelScope.launch {
             android.util.Log.d("ZinouTvSplash", "checkAppSecurity: Initiating security checks...")
-            
-            // Artificial delay to ensure UI transition is smooth and flows are ready to collect
             kotlinx.coroutines.delay(1200)
-
-            _eventFlow.emit(SplashEvent.NavigateToHome)
+            checkSessionAndLicense()
         }
     }
 

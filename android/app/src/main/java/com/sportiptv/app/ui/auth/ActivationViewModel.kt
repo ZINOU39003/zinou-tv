@@ -30,17 +30,9 @@ class ActivationViewModel @Inject constructor(
     val eventFlow: SharedFlow<ActivationEvent> = _eventFlow.asSharedFlow()
 
     fun onCodeChange(value: String) {
-        // Strip out non-alphanumeric characters and automatically format code format: ABCD-1234-EFGH-5678
-        val cleaned = value.replace("[^A-Za-z0-9]".toRegex(), "").uppercase()
-        val builder = StringBuilder()
-        for (i in cleaned.indices) {
-            if (i > 0 && i % 4 == 0) {
-                builder.append("-")
-            }
-            builder.append(cleaned[i])
-        }
-        val formatted = builder.toString().take(19) // XXXX-XXXX-XXXX-XXXX = 19 chars maximum
-        _code.value = formatted
+        // Just convert to uppercase and strip whitespaces, no hyphen formatting
+        val cleaned = value.replace("\\s".toRegex(), "").uppercase()
+        _code.value = cleaned
     }
 
     fun activate() {

@@ -77,8 +77,8 @@ fun ChannelCard(
             .aspectRatio(1f) // Square aspect ratio
             .clip(RoundedCornerShape(4.dp))
             .clickable { onClick() },
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF161616))
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(12.dp),
@@ -95,7 +95,7 @@ fun ChannelCard(
                         model = logoModel,
                         contentDescription = channel.name,
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize().padding(8.dp)
+                        modifier = Modifier.fillMaxSize().padding(4.dp)
                     )
                 } else {
                     Text(

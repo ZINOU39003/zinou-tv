@@ -28,12 +28,12 @@ interface SportApi {
         @Body request: HeartbeatRequest
     ): Response<ApiResponse<Unit?>>
 
-    @POST("license/activate")
+    @POST("activate")
     suspend fun activateLicense(
         @Body request: ActivateRequest
     ): Response<ApiResponse<ActivateResponse>>
 
-    @GET("license/validate")
+    @GET("validate")
     suspend fun validateLicense(): Response<ApiResponse<SubscriptionDto>>
 
     @GET("subscription")
@@ -88,6 +88,12 @@ interface SportApi {
 
     @GET("movies")
     suspend fun getMovies(
+        @Query("type") type: String? = null,
+        @Query("is_latest") isLatest: Int? = null
+    ): Response<ApiResponse<List<MovieDto>>>
+
+    @GET("series")
+    suspend fun getSeries(
         @Query("type") type: String? = null,
         @Query("is_latest") isLatest: Int? = null
     ): Response<ApiResponse<List<MovieDto>>>

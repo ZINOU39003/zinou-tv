@@ -14,5 +14,6 @@ interface ChannelRepository {
     fun searchChannels(query: String): Flow<List<Channel>>
     fun getChannelDetails(id: Long): Flow<Resource<Channel>>
     fun syncContent(): Flow<Resource<Unit>>
+    fun syncFromM3u(url: String): Flow<Resource<Unit>>
     fun clearCache(): Flow<Resource<Unit>>
 }

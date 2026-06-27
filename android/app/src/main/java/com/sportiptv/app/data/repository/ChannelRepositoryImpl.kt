@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import com.sportiptv.app.util.M3uParser
 import javax.inject.Inject
 
 class ChannelRepositoryImpl @Inject constructor(
@@ -32,7 +33,8 @@ class ChannelRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
     private val packageDao: PackageDao,
     private val favoriteDao: FavoriteDao,
-    private val json: Json
+    private val json: Json,
+    private val m3uParser: M3uParser
 ) : ChannelRepository {
 
     override fun getCategories(): Flow<List<Category>> {
@@ -97,7 +99,7 @@ class ChannelRepositoryImpl @Inject constructor(
                             ChannelServer(
                                 id = dto.id,
                                 name = dto.name,
-                                streamUrl = dto.stream_url,
+                                streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(dto.stream_url),
                                 streamType = dto.stream_type,
                                 quality = dto.quality
                             )
@@ -118,7 +120,7 @@ class ChannelRepositoryImpl @Inject constructor(
                     packageName = entity.packageName,
                     packageNameAr = entity.packageNameAr,
                     logoUrl = entity.logoUrl,
-                    streamUrl = entity.streamUrl,
+                    streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(entity.streamUrl),
                     streamType = entity.streamType,
                     quality = entity.quality,
                     backupUrl = entity.backupUrl,
@@ -146,7 +148,7 @@ class ChannelRepositoryImpl @Inject constructor(
                             ChannelServer(
                                 id = dto.id,
                                 name = dto.name,
-                                streamUrl = dto.stream_url,
+                                streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(dto.stream_url),
                                 streamType = dto.stream_type,
                                 quality = dto.quality
                             )
@@ -167,7 +169,7 @@ class ChannelRepositoryImpl @Inject constructor(
                     packageName = entity.packageName,
                     packageNameAr = entity.packageNameAr,
                     logoUrl = entity.logoUrl,
-                    streamUrl = entity.streamUrl,
+                    streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(entity.streamUrl),
                     streamType = entity.streamType,
                     quality = entity.quality,
                     backupUrl = entity.backupUrl,
@@ -203,7 +205,7 @@ class ChannelRepositoryImpl @Inject constructor(
                             ChannelServer(
                                 id = dto.id,
                                 name = dto.name,
-                                streamUrl = dto.stream_url,
+                                streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(dto.stream_url),
                                 streamType = dto.stream_type,
                                 quality = dto.quality
                             )
@@ -224,7 +226,7 @@ class ChannelRepositoryImpl @Inject constructor(
                     packageName = local.packageName,
                     packageNameAr = local.packageNameAr,
                     logoUrl = local.logoUrl,
-                    streamUrl = local.streamUrl,
+                    streamUrl = com.sportiptv.app.util.CryptoUtils.decryptStreamUrl(local.streamUrl),
                     streamType = local.streamType,
                     quality = local.quality,
                     backupUrl = local.backupUrl,
@@ -336,97 +338,184 @@ class ChannelRepositoryImpl @Inject constructor(
     override fun syncContent(): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading)
         try {
-            // Fetch categories first
+            // 1. Fetch channels
+            val chanResponse = sportApi.getChannels()
+            val chanListMutable = if (chanResponse.isSuccessful && chanResponse.body()?.success == true) {
+                chanResponse.body()?.data?.toMutableList() ?: mutableListOf()
+            } else {
+                emit(Resource.Error("Failed to sync channels."))
+                return@flow
+            }
+
+            // 2. Fetch categories
             val catResponse = sportApi.getCategories()
-            if (catResponse.isSuccessful && catResponse.body()?.success == true) {
-                val catList = catResponse.body()?.data ?: emptyList()
-                val catEntities = catList.map { dto ->
-                    CategoryEntity(
-                        id = dto.id,
-                        name = dto.name,
-                        nameAr = dto.name_ar,
-                        slug = dto.slug,
-                        icon = dto.icon,
-                        type = dto.type,
-                        sortOrder = dto.sort_order,
-                        isActive = dto.is_active,
-                        channelsCount = dto.channels_count
-                    )
-                }
-                categoryDao.clearCategories()
-                categoryDao.insertCategories(catEntities)
+            val catListMutable = if (catResponse.isSuccessful && catResponse.body()?.success == true) {
+                catResponse.body()?.data?.toMutableList() ?: mutableListOf()
             } else {
                 emit(Resource.Error("Failed to sync categories."))
                 return@flow
             }
 
-            // Sync packages
+            // 3. Fetch packages
             val pkgResponse = sportApi.getPackages()
-            if (pkgResponse.isSuccessful && pkgResponse.body()?.success == true) {
-                val pkgList = pkgResponse.body()?.data ?: emptyList()
-                val pkgEntities = pkgList.map { dto ->
-                    PackageEntity(
-                        id = dto.id,
-                        categoryId = dto.category_id,
-                        name = dto.name,
-                        nameAr = dto.name_ar,
-                        slug = dto.slug,
-                        logoUrl = dto.logo_url,
-                        sortOrder = dto.sort_order,
-                        isActive = dto.is_active,
-                        channelsCount = dto.channels_count
-                    )
-                }
-                packageDao.clearPackages()
-                packageDao.insertPackages(pkgEntities)
+            val pkgListMutable = if (pkgResponse.isSuccessful && pkgResponse.body()?.success == true) {
+                pkgResponse.body()?.data?.toMutableList() ?: mutableListOf()
             } else {
                 emit(Resource.Error("Failed to sync packages."))
                 return@flow
             }
 
-            // Next sync channels list
-            val chanResponse = sportApi.getChannels()
-            if (chanResponse.isSuccessful && chanResponse.body()?.success == true) {
-                val chanList = chanResponse.body()?.data ?: emptyList()
-                val chanEntities = chanList.map { dto ->
-                    val serJson = try {
-                        json.encodeToString(dto.servers)
-                    } catch (e: Exception) {
-                        null
-                    }
-                    ChannelEntity(
-                        id = dto.id,
-                        name = dto.name,
-                        nameAr = dto.name_ar,
-                        categoryId = dto.category_id,
-                        categoryName = dto.category_name,
-                        categoryNameAr = dto.category_name_ar,
-                        packageId = dto.package_id,
-                        packageName = dto.package_name,
-                        packageNameAr = dto.package_name_ar,
-                        logoUrl = dto.logo_url,
-                        streamUrl = dto.stream_url,
-                        streamType = dto.stream_type,
-                        quality = dto.quality,
-                        backupUrl = dto.backup_url,
-                        sortOrder = dto.sort_order,
-                        isActive = dto.is_active,
-                        country = dto.country,
-                        language = dto.language,
-                        continent = dto.continent,
-                        serversJson = serJson,
-                        drmLicenseUrl = dto.drm_license_url,
-                        drmHeaders = dto.drm_headers
-                    )
+            // --- CATEGORY GROUPING LOGIC ---
+            // Group categories belonging to the same company (e.g., BEIN, OSN, ROTANA, MBC, SSC)
+            val groupedCategories = mutableMapOf<String, com.sportiptv.app.data.remote.dto.CategoryDto>()
+            val categoryIdRemap = mutableMapOf<Long, Long>()
+
+            val finalCatList = mutableListOf<com.sportiptv.app.data.remote.dto.CategoryDto>()
+
+            for (cat in catListMutable) {
+                val nameLower = cat.name.lowercase(java.util.Locale.getDefault())
+                val groupKey = when {
+                    nameLower.contains("bein") -> "BEIN NETWORK"
+                    nameLower.contains("osn") -> "OSN NETWORK"
+                    nameLower.contains("rotana") -> "ROTANA NETWORK"
+                    nameLower.contains("mbc") || nameLower.contains("mbs") -> "MBC NETWORK"
+                    nameLower.contains("ssc") -> "SSC NETWORK"
+                    nameLower.contains("sky") -> "SKY NETWORK"
+                    else -> null
                 }
-                channelDao.clearChannels()
-                channelDao.insertChannels(chanEntities)
-                emit(Resource.Success(Unit))
-            } else {
-                emit(Resource.Error("Failed to sync channels."))
+
+                if (groupKey != null) {
+                    if (groupedCategories.containsKey(groupKey)) {
+                        // We already have a master category for this group, remap this category's ID to the master ID
+                        categoryIdRemap[cat.id] = groupedCategories[groupKey]!!.id
+                    } else {
+                        // This is the first category of this group. Make it the master category.
+                        val masterCat = cat.copy(name = groupKey, name_ar = groupKey)
+                        groupedCategories[groupKey] = masterCat
+                        finalCatList.add(masterCat)
+                        categoryIdRemap[cat.id] = masterCat.id
+                    }
+                } else {
+                    finalCatList.add(cat)
+                    categoryIdRemap[cat.id] = cat.id
+                }
             }
+
+            // Remap channel category IDs
+            val finalChanList = chanListMutable.map { chan ->
+                val newCatId = categoryIdRemap[chan.category_id] ?: chan.category_id
+                val newCatName = finalCatList.find { it.id == newCatId }?.name ?: chan.category_name
+                val newCatNameAr = finalCatList.find { it.id == newCatId }?.name_ar ?: chan.category_name_ar
+                chan.copy(category_id = newCatId, category_name = newCatName, category_name_ar = newCatNameAr)
+            }
+
+            // Remap package category IDs
+            val finalPkgList = pkgListMutable.map { pkg ->
+                val newCatId = categoryIdRemap[pkg.category_id] ?: pkg.category_id
+                pkg.copy(category_id = newCatId)
+            }
+            // --- END GROUPING LOGIC ---
+
+            // Save Categories
+            val catEntities = finalCatList.map { dto ->
+                val actualCount = finalChanList.count { it.category_id == dto.id }
+                
+                // Use category's own icon, or fallback to the first available channel's logo in this category
+                var finalIcon = dto.icon
+                if (finalIcon.isNullOrBlank()) {
+                    finalIcon = finalChanList.firstOrNull { it.category_id == dto.id && !it.logo_url.isNullOrBlank() }?.logo_url
+                }
+
+                CategoryEntity(
+                    id = dto.id,
+                    name = dto.name,
+                    nameAr = dto.name_ar,
+                    slug = dto.slug,
+                    icon = finalIcon,
+                    type = dto.type,
+                    sortOrder = dto.sort_order,
+                    isActive = dto.is_active,
+                    channelsCount = actualCount
+                )
+            }
+            categoryDao.clearCategories()
+            categoryDao.insertCategories(catEntities)
+
+            // Save Packages
+            val pkgEntities = finalPkgList.map { dto ->
+                val actualCount = finalChanList.count { it.package_id == dto.id }
+                PackageEntity(
+                    id = dto.id,
+                    categoryId = dto.category_id,
+                    name = dto.name,
+                    nameAr = dto.name_ar,
+                    slug = dto.slug,
+                    logoUrl = dto.logo_url,
+                    sortOrder = dto.sort_order,
+                    isActive = dto.is_active,
+                    channelsCount = actualCount
+                )
+            }
+            packageDao.clearPackages()
+            packageDao.insertPackages(pkgEntities)
+
+            // Save Channels
+            val chanEntities = finalChanList.map { dto ->
+                val serJson = try {
+                    json.encodeToString(dto.servers)
+                } catch (e: Exception) {
+                    null
+                }
+                ChannelEntity(
+                    id = dto.id,
+                    name = dto.name,
+                    nameAr = dto.name_ar,
+                    categoryId = dto.category_id,
+                    categoryName = dto.category_name,
+                    categoryNameAr = dto.category_name_ar,
+                    packageId = dto.package_id,
+                    packageName = dto.package_name,
+                    packageNameAr = dto.package_name_ar,
+                    logoUrl = dto.logo_url,
+                    streamUrl = dto.stream_url,
+                    streamType = dto.stream_type,
+                    quality = dto.quality,
+                    backupUrl = dto.backup_url,
+                    sortOrder = dto.sort_order,
+                    isActive = dto.is_active,
+                    country = dto.country,
+                    language = dto.language,
+                    continent = dto.continent,
+                    serversJson = serJson,
+                    drmLicenseUrl = dto.drm_license_url,
+                    drmHeaders = dto.drm_headers
+                )
+            }
+            channelDao.clearChannels()
+            channelDao.insertChannels(chanEntities)
+            
+            emit(Resource.Success(Unit))
         } catch (e: Exception) {
             emit(Resource.Error("Sync failed: ${e.localizedMessage ?: "Connection error"}"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    override fun syncFromM3u(url: String): Flow<Resource<Unit>> = flow {
+        emit(Resource.Loading)
+        try {
+            val result = m3uParser.fetchAndParseM3u(url)
+            
+            // Clear current channels
+            channelDao.clearChannels()
+            categoryDao.clearCategories()
+            
+            // Insert parsed
+            categoryDao.insertCategories(result.categories)
+            channelDao.insertChannels(result.channels)
+            
+            emit(Resource.Success(Unit))
+        } catch (e: Exception) {
+            emit(Resource.Error("M3U Sync failed: ${e.localizedMessage}"))
         }
     }.flowOn(Dispatchers.IO)
 

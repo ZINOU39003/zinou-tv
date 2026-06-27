@@ -37,16 +37,29 @@ class ChannelResource extends JsonResource
 
         // Fetch servers or synthesize from primary/backup stream
         $servers = [];
-        $dbServers = $this->relationLoaded('servers') ? $this->servers : $this->servers()->where('is_active', true)->get();
+        $dbServers = $this->relationLoaded('servers') ? $this->servers : $this->servers()->where('is_active', true)->orderBy('sort_order', 'asc')->get();
 
-        if ($dbServers && count($dbServers) > 0) {
-            foreach ($dbServers as $server) {
+        // Auto-Failover: Prioritize online servers, fallback to untested, offline last
+        $sortedServers = $dbServers->sortBy(function($server) {
+            if ($server->status === 'online') return 1;
+            if ($server->status === 'untested') return 2;
+            return 3;
+        });
+
+        // Best server to use as primary
+        $bestServer = $sortedServers->first();
+        $primaryStreamUrl = $bestServer ? $bestServer->stream_url : $this->stream_url;
+        $primaryStreamType = $bestServer ? ($bestServer->stream_type->value ?? $bestServer->stream_type) : ($this->stream_type->value ?? $this->stream_type);
+
+        if ($sortedServers->isNotEmpty()) {
+            foreach ($sortedServers as $server) {
                 $servers[] = [
                     'id' => $server->id,
-                    'name' => $server->name,
+                    'name' => $server->name . ($server->status == 'offline' ? ' (Offline)' : ''),
                     'stream_url' => $getProxiedUrl($this->id, $server->stream_url),
                     'stream_type' => $server->stream_type->value ?? $server->stream_type,
                     'quality' => $server->quality->value ?? $server->quality,
+                    'status' => $server->status
                 ];
             }
         } else {
@@ -58,6 +71,7 @@ class ChannelResource extends JsonResource
                     'stream_url' => $getProxiedUrl($this->id, $this->stream_url),
                     'stream_type' => $this->stream_type->value ?? $this->stream_type,
                     'quality' => $this->quality->value ?? $this->quality,
+                    'status' => 'untested'
                 ];
             }
             if ($this->backup_url) {
@@ -82,8 +96,8 @@ class ChannelResource extends JsonResource
             'package_name' => $this->package ? $this->package->name : null,
             'package_name_ar' => $this->package ? $this->package->name_ar : null,
             'logo_url' => MediaUrl::resolve($this->logo_url),
-            'stream_url' => $getProxiedUrl($this->id, $this->stream_url),
-            'stream_type' => $this->stream_type->value ?? $this->stream_type,
+            'stream_url' => $getProxiedUrl($this->id, $primaryStreamUrl),
+            'stream_type' => $primaryStreamType,
             'quality' => $this->quality->value ?? $this->quality,
             'country' => $this->country,
             'language' => $this->language,

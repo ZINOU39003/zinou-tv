@@ -12,12 +12,6 @@ class ActivateLicenseUseCase @Inject constructor(
 ) {
     operator fun invoke(code: String): Flow<Resource<Subscription>> {
         val cleanCode = code.trim().uppercase()
-        val regex = Regex("^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$")
-        
-        if (!regex.matches(cleanCode)) {
-            return flow { emit(Resource.Error("Invalid activation code format. Use XXXX-XXXX-XXXX-XXXX")) }
-        }
-        
         return subscriptionRepository.activateLicense(cleanCode)
     }
 }

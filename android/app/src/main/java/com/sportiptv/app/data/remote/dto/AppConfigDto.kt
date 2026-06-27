@@ -28,4 +28,6 @@ data class AppConfigDto(
     val update_message: String = "",
     val latest_apk_url: String = "",
     val stream_ticker_text: String = "",
+    val epg_url: String = "",
+    val onesignal_app_id: String = "",
 )

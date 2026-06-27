@@ -14,6 +14,9 @@ sealed class Screen(val route: String) {
     object Subscription : Screen("subscription_screen")
     object Matches : Screen("matches_screen")
     object Movies : Screen("movies_screen")
+    object Series : Screen("series_screen")
+    object Anime : Screen("anime_screen")
+    object Wrestling : Screen("wrestling_screen")
     object WorldCup : Screen("world_cup_screen")
     object MatchDetails : Screen("match_details_screen/{matchId}") {
         fun createRoute(matchId: Long) = "match_details_screen/$matchId"

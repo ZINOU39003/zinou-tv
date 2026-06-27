@@ -1,7 +1,7 @@
 package com.sportiptv.app.util
 
 object Constants {
-    const val BASE_URL = "https://zinou-tv-4.onrender.com/api/"
+    const val BASE_URL = "https://api.zinou-tv.workers.dev/api/app/"
 
     const val DEFAULT_API_KEY = "SportIptvDefaultApiKeySecret2026"
 

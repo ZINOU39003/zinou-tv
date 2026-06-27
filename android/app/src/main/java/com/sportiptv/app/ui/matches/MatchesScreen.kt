@@ -66,12 +66,11 @@ fun MatchesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPrimary)
+            .background(Color(0xFF0A0A0A))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color(0xFF130924), BgPrimary)))
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -328,7 +327,7 @@ private fun ProfessionalMatchCard(
             width = if (isLive) 1.5.dp else 1.dp,
             color = if (isLive) Primary.copy(alpha = 0.5f) else Color(0x18FFFFFF)
         ),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141022))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
     ) {
         Column(
             modifier = Modifier
@@ -337,7 +336,7 @@ private fun ProfessionalMatchCard(
                     Brush.verticalGradient(
                         listOf(
                             if (isLive) Color(0x22FF4444) else Color(0x12FFFFFF),
-                            Color(0xFF141022)
+                            Color(0xFF1E1E1E)
                         )
                     )
                 )

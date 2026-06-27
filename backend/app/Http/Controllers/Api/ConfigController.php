@@ -29,6 +29,7 @@ class ConfigController extends Controller
         $updateMessage = Setting::get('update_message', 'يتوفر تحديث جديد. يرجى تحديث التطبيق للمتابعة.');
         $latestApkUrl = MediaUrl::resolve(Setting::get('latest_apk_url', '')) ?? '';
         $streamTickerText = Setting::get('stream_ticker_text', '');
+        $onesignalAppId = Setting::get('onesignal_app_id', '');
 
         return $this->success([
             'whatsapp_number' => $whatsappNumber,
@@ -43,6 +44,7 @@ class ConfigController extends Controller
             'update_message' => $updateMessage,
             'latest_apk_url' => $latestApkUrl,
             'stream_ticker_text' => $streamTickerText,
+            'onesignal_app_id' => $onesignalAppId,
         ], 'Configuration retrieved successfully.');
     }
 }

@@ -16,6 +16,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Sports
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.ui.unit.sp
 import com.sportiptv.app.ui.navigation.Screen
 import com.sportiptv.app.ui.theme.BgSecondary
 import com.sportiptv.app.ui.theme.Primary
@@ -25,22 +31,20 @@ fun BottomNavBar(
     currentRoute: String?,
     onNavigate: (String) -> Unit
 ) {
-    val isArabic = java.util.Locale.getDefault().language == "ar"
     val items = listOf(
-        NavigationItem(if (isArabic) "الرئيسية" else "Home", Screen.Home.route, Icons.Default.Home),
-        NavigationItem(if (isArabic) "القنوات" else "Channels", Screen.Channels.route, Icons.Default.List),
-        NavigationItem(if (isArabic) "المباريات" else "Matches", Screen.Matches.route, Icons.Default.SportsSoccer),
-        NavigationItem(if (isArabic) "المفضلة" else "Favorites", Screen.Favorites.route, Icons.Default.Favorite),
-        NavigationItem(if (isArabic) "الإعدادات" else "Settings", Screen.Settings.route, Icons.Default.Settings)
+        NavigationItem("الرئيسية", Screen.Home.route, Icons.Default.Home),
+        NavigationItem("المسلسلات", Screen.Series.route, Icons.Default.PlayArrow),
+        NavigationItem("الأفلام", Screen.Movies.route, Icons.Default.Movie),
+        NavigationItem("القنوات", Screen.Channels.route, Icons.Default.Tv),
+        NavigationItem("المباريات", Screen.Matches.route, Icons.Default.SportsSoccer)
     )
 
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-            .background(BgSecondary),
-        containerColor = BgSecondary,
-        tonalElevation = 8.dp
+            .background(Color(0xFF0F0F0F)),
+        containerColor = Color(0xFF0F0F0F),
+        tonalElevation = 0.dp
     ) {
         items.forEach { item ->
             val selected = currentRoute == item.route || 
@@ -51,17 +55,26 @@ fun BottomNavBar(
                 icon = {
                     Icon(
                         imageVector = item.icon,
-                        contentDescription = item.title
+                        contentDescription = item.title,
+                        modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(text = item.title) },
+                label = { 
+                    Text(
+                        text = item.title, 
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        color = if (selected) Primary else Color.Gray
+                    ) 
+                },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
+                    selectedIconColor = Primary,
                     selectedTextColor = Primary,
-                    indicatorColor = Color(0xFF9D00FF), // Neon Purple indicator
+                    indicatorColor = Color.Transparent, // No background highlight
                     unselectedIconColor = Color.Gray,
                     unselectedTextColor = Color.Gray
-                )
+                ),
+                alwaysShowLabel = true
             )
         }
     }

@@ -41,6 +41,7 @@ class ChannelsViewModel @Inject constructor(
     val selectedPackageId: StateFlow<Long?> = _selectedPackageId.asStateFlow()
 
     val categories: StateFlow<List<Category>> = getCategoriesUseCase()
+        .map { list -> list.filter { it.channelsCount > 0 } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,6 +49,7 @@ class ChannelsViewModel @Inject constructor(
         .flatMapLatest { categoryId -> 
             if (categoryId != null) getPackagesUseCase(categoryId) else flowOf(emptyList()) 
         }
+        .map { list -> list.filter { it.channelsCount > 0 } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)

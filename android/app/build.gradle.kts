@@ -107,6 +107,18 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
+    // WorkManager & Hilt Work
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
+    ksp("androidx.hilt:hilt-compiler:1.2.0")
+
     // AdMob Integration
     implementation("com.google.android.gms:play-services-ads:23.6.0")
+
+    // Google Cast Framework & Media3 Cast
+    implementation("com.google.android.gms:play-services-cast-framework:21.4.0")
+    implementation("androidx.media3:media3-cast:1.3.1")
+
+    // OneSignal for Push Notifications
+    implementation(libs.onesignal)
 }

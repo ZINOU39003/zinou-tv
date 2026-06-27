@@ -41,4 +41,10 @@ abstract class RepositoryModule {
     abstract fun bindSubscriptionRepository(
         subscriptionRepositoryImpl: SubscriptionRepositoryImpl
     ): SubscriptionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEpgRepository(
+        epgRepositoryImpl: com.sportiptv.app.data.repository.EpgRepositoryImpl
+    ): com.sportiptv.app.domain.repository.EpgRepository
 }

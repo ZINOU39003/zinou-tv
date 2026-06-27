@@ -11,6 +11,7 @@ import com.sportiptv.app.domain.usecase.GetChannelsUseCase
 import com.sportiptv.app.domain.usecase.ToggleFavoriteUseCase
 import com.sportiptv.app.data.remote.api.SportApi
 import com.sportiptv.app.data.remote.dto.MatchDto
+import com.sportiptv.app.data.remote.dto.MovieDto
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -41,9 +42,33 @@ class HomeViewModel @Inject constructor(
     private val _liveMatches = MutableStateFlow<List<MatchDto>>(emptyList())
     val liveMatches: StateFlow<List<MatchDto>> = _liveMatches.asStateFlow()
 
+    private val _movies = MutableStateFlow<List<MovieDto>>(emptyList())
+    val movies: StateFlow<List<MovieDto>> = _movies.asStateFlow()
+
+    private val _series = MutableStateFlow<List<MovieDto>>(emptyList())
+    val series: StateFlow<List<MovieDto>> = _series.asStateFlow()
+
     init {
         syncData()
         fetchLiveMatches()
+        fetchMoviesAndSeries()
+    }
+
+    private fun fetchMoviesAndSeries() {
+        viewModelScope.launch {
+            try {
+                val moviesResponse = sportApi.getMovies()
+                if (moviesResponse.isSuccessful) {
+                    _movies.value = moviesResponse.body()?.data ?: emptyList()
+                }
+                val seriesResponse = sportApi.getSeries()
+                if (seriesResponse.isSuccessful) {
+                    _series.value = seriesResponse.body()?.data ?: emptyList()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun fetchLiveMatches() {

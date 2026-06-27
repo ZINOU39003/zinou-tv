@@ -49,7 +49,8 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        tokenAuthenticator: TokenAuthenticator
+        tokenAuthenticator: TokenAuthenticator,
+        telemetryInterceptor: com.sportiptv.app.data.remote.api.TelemetryInterceptor
     ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.HEADERS
@@ -75,6 +76,7 @@ object NetworkModule {
             .sslSocketFactory(sslContext.socketFactory, trustAllCerts[0] as javax.net.ssl.X509TrustManager)
             .hostnameVerifier { _, _ -> true }
             .addInterceptor(authInterceptor)
+            .addInterceptor(telemetryInterceptor)
             .addInterceptor(loggingInterceptor)
             .authenticator(tokenAuthenticator)
             .build()

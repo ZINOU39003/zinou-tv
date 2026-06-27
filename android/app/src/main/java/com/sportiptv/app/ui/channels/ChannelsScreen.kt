@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -27,7 +28,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sportiptv.app.R
 import com.sportiptv.app.util.Constants
 import coil3.compose.AsyncImage
 import com.sportiptv.app.util.ImageUrlResolver
@@ -89,128 +92,95 @@ fun ChannelsScreen(
     }
 
     val isArabic = Locale.getDefault().language == "ar"
-    val networksTitleText = if (isArabic) "الشبكات" else "Networks"
     val emptyMsg = if (isArabic) "لا توجد قنوات أو باقات متوفرة" else "No items available"
-    val syncingMsg = if (isArabic) "جاري تحميل القنوات..." else "Loading channels..."
-
-    val showChannels = selectedPackageId != null ||
-        (selectedCategoryId != null && packages.isEmpty())
+    val syncingMsg = if (isArabic) "جاري تحميل البيانات..." else "Loading data..."
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPrimary)
+            .background(Color(0xFF0A0A0A))
     ) {
-        if (selectedCategoryId == null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                IconButton(onClick = onNavigateHome) {
-                    Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Primary)
+        // Top Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = {
+                if (selectedPackageId != null) {
+                    viewModel.selectPackage(null)
+                } else if (selectedCategoryId != null && initialCategoryId == null) {
+                    viewModel.selectCategory(null)
+                } else {
+                    onNavigateHome()
                 }
-                Text(
-                    text = "ZINOU TV",
-                    color = Primary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                IconButton(onClick = { /* TODO: Search */ }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
-                }
+            }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
             }
-        } else {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                val category = categories.find { it.id == selectedCategoryId }
-                val catName = category?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: ""
-                val pkg = packages.find { it.id == selectedPackageId }
-                val pkgName = pkg?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: ""
-
-                IconButton(
-                    onClick = {
-                        if (selectedPackageId != null) {
-                            viewModel.selectPackage(null)
-                        } else {
-                            viewModel.selectCategory(null)
-                        }
-                    }
-                ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Primary)
-                }
-
-                Text(
-                    text = if (selectedPackageId != null) "$catName - $pkgName" else catName,
-                    color = Primary,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                IconButton(onClick = { /* TODO: Search */ }) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Primary)
-                }
+            Text(
+                text = when {
+                    selectedPackageId != null -> packages.find { it.id == selectedPackageId }?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: "القنوات"
+                    selectedCategoryId != null -> categories.find { it.id == selectedCategoryId }?.let { if (isArabic && !it.nameAr.isNullOrEmpty()) it.nameAr else it.name } ?: "الباقات"
+                    else -> "الشبكات"
+                },
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            IconButton(onClick = { /* TODO: Search */ }) {
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.White)
             }
         }
 
-        when {
-            syncState is Resource.Loading && categories.isEmpty() -> LoadingState(syncingMsg)
-            showChannels -> {
-                if (channels.isEmpty()) {
-                    if (syncState is Resource.Loading) LoadingState(syncingMsg)
-                    else EmptyState(emptyMsg, isArabic, showRetry = true) { viewModel.retrySync() }
-                } else {
-                    ChannelsGrid(channels, isLandscape, onChannelClick, viewModel)
+        // Content Area
+        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+            when {
+                syncState is Resource.Loading && categories.isEmpty() -> {
+                    LoadingState(syncingMsg)
                 }
-            }
-            selectedCategoryId == null -> {
-                if (categories.isEmpty()) {
-                    EmptyState(emptyMsg, isArabic, syncState is Resource.Error) { viewModel.retrySync() }
-                } else {
-                    val gridEntries = remember(categories, adsEnabled) {
-                        if (adsEnabled) buildGridWithAd(categories) { GridEntry.CategoryItem(it) }
-                        else categories.map { GridEntry.CategoryItem(it) }
+                selectedCategoryId == null -> {
+                    // Show Categories Grid
+                    if (categories.isEmpty()) {
+                        EmptyState(emptyMsg, isArabic, showRetry = true) { viewModel.retrySync() }
+                    } else {
+                        val entries = buildGridWithAd(categories) { GridEntry.CategoryItem(it) }
+                        NetworkPackageGrid(
+                            entries = entries,
+                            columnsCount = columnsCount,
+                            isArabic = isArabic,
+                            bannerAdUnitId = bannerAdUnitId,
+                            onCategoryClick = { viewModel.selectCategory(it) },
+                            onPackageClick = {}
+                        )
                     }
+                }
+                selectedPackageId == null && packages.isNotEmpty() -> {
+                    // Show Packages Grid
+                    val entries = buildGridWithAd(packages) { GridEntry.PackageItem(it) }
                     NetworkPackageGrid(
-                        entries = gridEntries,
+                        entries = entries,
                         columnsCount = columnsCount,
                         isArabic = isArabic,
                         bannerAdUnitId = bannerAdUnitId,
-                        onCategoryClick = { viewModel.selectCategory(it) },
+                        onCategoryClick = {},
                         onPackageClick = { viewModel.selectPackage(it) }
                     )
                 }
-            }
-            packages.isEmpty() -> {
-                EmptyState(emptyMsg, isArabic, showRetry = true) { viewModel.retrySync() }
-            }
-            else -> {
-                val gridEntries = remember(packages, adsEnabled) {
-                    if (adsEnabled) buildGridWithAd(packages) { GridEntry.PackageItem(it) }
-                    else packages.map { GridEntry.PackageItem(it) }
+                else -> {
+                    // Show Channels Grid
+                    if (channels.isEmpty()) {
+                        EmptyState(emptyMsg, isArabic, showRetry = true) { viewModel.retrySync() }
+                    } else {
+                        ChannelsGrid(channels, isLandscape, onChannelClick, viewModel)
+                    }
                 }
-                NetworkPackageGrid(
-                    entries = gridEntries,
-                    columnsCount = columnsCount,
-                    isArabic = isArabic,
-                    bannerAdUnitId = bannerAdUnitId,
-                    onCategoryClick = { viewModel.selectCategory(it) },
-                    onPackageClick = { viewModel.selectPackage(it) }
-                )
             }
         }
 
         if (adsEnabled) {
-            Box(modifier = Modifier.fillMaxWidth().background(BgPrimary)) {
+            Box(modifier = Modifier.fillMaxWidth().background(Color(0xFF0A0A0A))) {
                 AdBanner(adUnitId = bannerAdUnitId)
             }
         }
@@ -218,7 +188,7 @@ fun ChannelsScreen(
 }
 
 @Composable
-private fun ColumnScope.ChannelsGrid(
+private fun ChannelsGrid(
     channels: List<com.sportiptv.app.domain.model.Channel>,
     isLandscape: Boolean,
     onChannelClick: (Long) -> Unit,
@@ -226,7 +196,7 @@ private fun ColumnScope.ChannelsGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(if (isLandscape) 6 else 3),
-        modifier = Modifier.fillMaxWidth().weight(1f),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -242,7 +212,7 @@ private fun ColumnScope.ChannelsGrid(
 }
 
 @Composable
-private fun ColumnScope.NetworkPackageGrid(
+private fun NetworkPackageGrid(
     entries: List<GridEntry>,
     columnsCount: Int,
     isArabic: Boolean,
@@ -252,7 +222,7 @@ private fun ColumnScope.NetworkPackageGrid(
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columnsCount),
-        modifier = Modifier.fillMaxWidth().weight(1f),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -288,10 +258,10 @@ fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f) // Square aspect ratio as in images
+            .aspectRatio(0.9f) // Slightly taller to fit marquee text nicely
             .clickable { onClick() },
-        shape = RoundedCornerShape(4.dp),
-        colors = CardDefaults.cardColors(containerColor = CardBg)
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF111111))
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(12.dp),
@@ -299,7 +269,12 @@ fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () 
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.weight(1f).fillMaxWidth(0.85f),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .background(Color.Black, shape = RoundedCornerShape(16.dp))
+                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 val resolvedUrl = ImageUrlResolver.resolve(logoUrl)
@@ -307,22 +282,46 @@ fun NetworkOrPackageCard(id: String, name: String, logoUrl: String, onClick: () 
                     AsyncImage(
                         model = resolvedUrl,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize().padding(8.dp),
+                        modifier = Modifier.fillMaxSize().padding(12.dp),
                         contentScale = ContentScale.Fit
                     )
                 } else {
-                    Text(name.take(2).uppercase(), color = Primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    // Mapping logic based on network name
+                    val lowerName = name.lowercase(Locale.getDefault())
+                    val iconRes = when {
+                        lowerName.contains("sport") || lowerName.contains("رياضة") || lowerName.contains("bein") -> R.drawable.ic_sports // You'll need to add this or use ImageVector
+                        lowerName.contains("news") || lowerName.contains("اخبار") -> R.drawable.ic_news
+                        lowerName.contains("kid") || lowerName.contains("اطفال") -> R.drawable.ic_kids
+                        lowerName.contains("movie") || lowerName.contains("افلام") -> R.drawable.ic_movies
+                        lowerName.contains("vip") -> R.drawable.ic_vip
+                        lowerName.contains("ar") || lowerName.contains("عرب") -> R.drawable.ic_arab
+                        lowerName.contains("fr") || lowerName.contains("france") -> R.drawable.ic_france
+                        lowerName.contains("uk") || lowerName.contains("england") -> R.drawable.ic_uk
+                        else -> null
+                    }
+                    
+                    if (iconRes != null) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(id = iconRes),
+                            contentDescription = name,
+                            modifier = Modifier.fillMaxSize().padding(8.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    } else {
+                        // Fallback to text if no mapped icon
+                        Text(name.take(2).uppercase(), color = Primary, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = name,
-                color = TextMain,
-                fontSize = 12.sp,
+                color = Color.LightGray,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                modifier = Modifier.fillMaxWidth().basicMarquee(),
+                maxLines = 1
             )
         }
     }

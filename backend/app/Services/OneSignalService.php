@@ -25,7 +25,7 @@ class OneSignalService
      * @param array $data Optional extra data (e.g., match_id)
      * @return bool
      */
-    public function sendToAll($title, $message, $data = [])
+    public function sendToAll($title, $message, $data = [], $options = [])
     {
         if (empty($this->restApiKey)) {
             Log::warning('OneSignal API Key is empty. Cannot send notification: ' . $title);
@@ -41,6 +41,18 @@ class OneSignalService
 
         if (!empty($data)) {
             $payload['data'] = $data;
+        }
+
+        // Add rich notification options
+        if (!empty($options['big_picture'])) {
+            $payload['big_picture'] = $options['big_picture'];
+            $payload['ios_attachments'] = ['id1' => $options['big_picture']];
+        }
+        if (!empty($options['large_icon'])) {
+            $payload['large_icon'] = $options['large_icon'];
+        }
+        if (!empty($options['buttons'])) {
+            $payload['buttons'] = $options['buttons'];
         }
 
         try {

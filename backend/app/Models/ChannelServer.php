@@ -14,11 +14,15 @@ class ChannelServer extends Model
 
     protected $fillable = [
         'channel_id',
+        'provider_id',
         'name',
         'stream_url',
         'stream_type',
         'quality',
         'is_active',
+        'last_check_time',
+        'status',
+        'response_time_ms',
         'sort_order',
     ];
 

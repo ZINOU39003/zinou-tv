@@ -890,7 +890,15 @@
                     <span class="nav-icon">
                         <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
                     </span>
-                    الشبكات
+                    الشبكات والتصنيفات
+                </a>
+            </li>
+            <li class="{{ Request::is('admin/category_filters*') ? 'active' : '' }}">
+                <a href="{{ route('admin.category_filters.index') }}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                    </span>
+                    فلاتر الاستيراد (+18)
                 </a>
             </li>
             <li class="{{ Request::is('admin/packages*') ? 'active' : '' }}">
@@ -907,6 +915,14 @@
                         <svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 8.25c-.97 0-1.75-.78-1.75-1.75s.78-1.75 1.75-1.75 1.75.78 1.75 1.75-.78 1.75-1.75 1.75z"/></svg>
                     </span>
                     أسعار الاشتراك والواتساب
+                </a>
+            </li>
+            <li class="{{ Request::is('admin/providers*') ? 'active' : '' }}">
+                <a href="{{ route('admin.providers.index') }}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 15v4H5v-4h14m1-2H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 18.5c-.82 0-1.5-.67-1.5-1.5s.68-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM19 5v4H5V5h14m1-2H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 8.5c-.82 0-1.5-.67-1.5-1.5S6.18 5.5 7 5.5s1.5.68 1.5 1.5S7.83 8.5 7 8.5z"/></svg>
+                    </span>
+                    مزودي الخدمة (Providers)
                 </a>
             </li>
             <li class="{{ Request::is('admin/channels*') ? 'active' : '' }}">
@@ -980,6 +996,14 @@
                         <svg viewBox="0 0 24 24"><path d="M12 8c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h1 1.25-3.33l-1.42 1.42C18.47 10.74 19 11.81 19 13s-.53 2.26-1.17 2.92l1.42 1.42C20.24 16.29 21 14.74 21 13s-.76-3.29-1.75-4.33zM4 12c0-2.21 1.79-4 4-4v8c-2.21 0-4-1.79-4-4z"/></svg>
                     </span>
                     إدارة الإعلانات
+                </a>
+            </li>
+            <li class="{{ Request::is('admin/backups*') ? 'active' : '' }}">
+                <a href="{{ route('admin.backups.index') }}">
+                    <span class="nav-icon">
+                        <svg viewBox="0 0 24 24"><path d="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2z"/></svg>
+                    </span>
+                    النسخ الاحتياطي للنظام
                 </a>
             </li>
             <li class="{{ Request::is('admin/settings/app*') ? 'active' : '' }}">

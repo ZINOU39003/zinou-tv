@@ -21,8 +21,12 @@ dependencyResolutionManagement {
         mavenCentral()
         // For freeRASP if needed in production
         maven { url = java.net.URI("https://europe-west3-maven.pkg.dev/talsec-artifact-repository/freerasp") }
+        // For Xposed API
+        maven { url = java.net.URI("https://api.xposed.info/") }
     }
 }
 
 rootProject.name = "Sport IPTV"
 include(":app")
+include(":stream-detector:app")
+include(":xposed-detector")

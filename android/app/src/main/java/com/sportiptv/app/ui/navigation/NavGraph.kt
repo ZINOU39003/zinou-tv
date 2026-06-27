@@ -41,6 +41,7 @@ import com.sportiptv.app.ui.splash.SplashScreen
 import com.sportiptv.app.ui.subscription.SubscriptionScreen
 import com.sportiptv.app.ui.worldcup.WorldCupScreen
 import com.sportiptv.app.ui.admin.AdminPanelScreen
+import com.sportiptv.app.ui.theme.BgPrimary
 
 @Composable
 fun NavGraph(
@@ -75,7 +76,11 @@ fun NavGraph(
         Screen.Channels.route,
         Screen.Favorites.route,
         Screen.Settings.route,
-        "matches_screen",
+        Screen.Matches.route,
+        Screen.Movies.route,
+        Screen.Series.route,
+        Screen.Anime.route,
+        Screen.Wrestling.route,
         Screen.WorldCup.route
     )
 
@@ -85,10 +90,10 @@ fun NavGraph(
 
     Row(modifier = Modifier.fillMaxSize()) {
         Scaffold(
+            modifier = Modifier.weight(1f),
             bottomBar = {
-                // Render Bottom Navigation Bar in Portrait Mode
                 if (showBottomBar && !isLandscape) {
-                    BottomNavBar(
+                    com.sportiptv.app.ui.components.BottomNavBar(
                         currentRoute = currentRoute,
                         onNavigate = { route ->
                             navController.navigate(route) {
@@ -99,8 +104,7 @@ fun NavGraph(
                         }
                     )
                 }
-            },
-            modifier = Modifier.weight(1f)
+            }
         ) { innerPadding ->
             NavHost(
                 navController = navController,
@@ -192,6 +196,10 @@ fun NavGraph(
                             },
                             onActivationClick = {
                                 navController.navigate(Screen.Activation.route)
+                            },
+                            onMovieItemClick = { streamUrl ->
+                                val encoded = android.net.Uri.encode(streamUrl)
+                                navController.navigate("player_direct/$encoded")
                             }
                         )
                     }
@@ -204,6 +212,44 @@ fun NavGraph(
                             navController.navigate(Screen.Player.createRoute(channelId))
                         }
                     )
+                }
+
+                // Movies Route
+                composable(Screen.Movies.route) {
+                    MoviesScreen(
+                        onMovieClick = { movie ->
+                            val encodedUrl = android.net.Uri.encode(movie.stream_url ?: "")
+                            val encodedTitle = android.net.Uri.encode(movie.title)
+                            val encodedPoster = android.net.Uri.encode(movie.poster_url ?: "")
+                            navController.navigate("player_direct/$encodedUrl?title=$encodedTitle&poster=$encodedPoster")
+                        }
+                    )
+                }
+
+                // Series Route
+                composable(Screen.Series.route) {
+                    com.sportiptv.app.ui.movies.SeriesScreen(
+                        onSeriesClick = { movie ->
+                            val encodedUrl = android.net.Uri.encode(movie.stream_url ?: "")
+                            val encodedTitle = android.net.Uri.encode(movie.title)
+                            val encodedPoster = android.net.Uri.encode(movie.poster_url ?: "")
+                            navController.navigate("player_direct/$encodedUrl?title=$encodedTitle&poster=$encodedPoster")
+                        }
+                    )
+                }
+
+                // Anime Route
+                composable(Screen.Anime.route) {
+                    Box(modifier = Modifier.fillMaxSize().background(BgPrimary), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                        Text("قسم الأنمي قريباً", color = Color.White, fontSize = 20.sp)
+                    }
+                }
+
+                // Wrestling Route
+                composable(Screen.Wrestling.route) {
+                    Box(modifier = Modifier.fillMaxSize().background(BgPrimary), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                        Text("قسم المصارعة قريباً", color = Color.White, fontSize = 20.sp)
+                    }
                 }
 
 
@@ -335,16 +381,26 @@ fun NavGraph(
                     )
                 }
 
-                // Direct stream player (from World Cup match stream URL)
+                // Direct stream player (from World Cup match stream URL or Movies)
                 composable(
-                    route = "player_direct/{streamUrl}",
-                    arguments = listOf(navArgument("streamUrl") { type = NavType.StringType })
+                    route = "player_direct/{streamUrl}?title={title}&poster={poster}",
+                    arguments = listOf(
+                        navArgument("streamUrl") { type = NavType.StringType },
+                        navArgument("title") { type = NavType.StringType; nullable = true; defaultValue = null },
+                        navArgument("poster") { type = NavType.StringType; nullable = true; defaultValue = null }
+                    )
                 ) { backStackEntry ->
                     val encodedUrl = backStackEntry.arguments?.getString("streamUrl") ?: ""
                     val streamUrl = java.net.URLDecoder.decode(encodedUrl, "UTF-8")
+                    val titleEncoded = backStackEntry.arguments?.getString("title") ?: ""
+                    val title = if (titleEncoded.isNotBlank()) java.net.URLDecoder.decode(titleEncoded, "UTF-8") else "بث مباشر للمباراة"
+                    val posterEncoded = backStackEntry.arguments?.getString("poster") ?: ""
+                    val poster = if (posterEncoded.isNotBlank()) java.net.URLDecoder.decode(posterEncoded, "UTF-8") else ""
                     PlayerScreen(
                         channelId = 0L,
                         directStreamUrl = streamUrl,
+                        directTitle = title,
+                        directPoster = poster,
                         onBackClick = { navController.popBackStack() }
                     )
                 }

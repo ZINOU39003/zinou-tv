@@ -61,6 +61,21 @@
             @endif
         </div>
 
+        <div class="section-header" style="margin-top: 32px;">
+            <h2><span class="icon">🔔</span> إعدادات الإشعارات (OneSignal)</h2>
+        </div>
+
+        <div class="form-group">
+            <label for="onesignal_app_id">معرف تطبيق OneSignal (App ID)</label>
+            <input type="text" id="onesignal_app_id" name="onesignal_app_id" class="form-control"
+                   value="{{ old('onesignal_app_id', $onesignalAppId ?? '') }}"
+                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                   style="font-family:monospace;font-size:13px;">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                أدخل المعرف لتفعيل إرسال الإشعارات التلقائية للمستخدمين من لوحة التحكم.
+            </p>
+        </div>
+
         <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:32px;border-top:1px solid var(--border-glass);padding-top:20px;">
             <button type="submit" class="btn btn-primary" style="padding:11px 28px;">حفظ إعدادات التطبيق</button>
         </div>

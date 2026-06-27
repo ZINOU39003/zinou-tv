@@ -1,6 +1,7 @@
 package com.sportiptv.app.ui.movies
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -31,6 +32,7 @@ import com.sportiptv.app.ui.theme.*
 
 @Composable
 fun MoviesScreen(
+    onMovieClick: (MovieDto) -> Unit,
     viewModel: MoviesViewModel = hiltViewModel()
 ) {
     val movies by viewModel.movies.collectAsState()
@@ -43,29 +45,17 @@ fun MoviesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgPrimary)
+            .background(Color(0xFF0A0A0A)) // Oscar TV Dark
     ) {
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFF130924), BgPrimary)
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Movie,
-                    contentDescription = null,
-                    tint = Primary,
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = if (isArabic) "الأفلام والمسلسلات" else "Movies & Series",
                     color = Color.White,
@@ -76,110 +66,84 @@ fun MoviesScreen(
         }
 
         // Filter Chips Row
-        Row(
+        androidx.compose.foundation.lazy.LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            MovieFilterChip(
-                label = if (isArabic) "الكل" else "All",
-                isSelected = currentFilter == null,
-                onClick = { viewModel.setTypeFilter(null) }
-            )
-            MovieFilterChip(
-                label = if (isArabic) "أفلام" else "Movies",
-                isSelected = currentFilter == "movie",
-                onClick = { viewModel.setTypeFilter("movie") }
-            )
-            MovieFilterChip(
-                label = if (isArabic) "مسلسلات" else "Series",
-                isSelected = currentFilter == "series",
-                onClick = { viewModel.setTypeFilter("series") }
-            )
+            item {
+                MovieFilterChip(
+                    label = if (isArabic) "الكل" else "All",
+                    isSelected = currentFilter == null,
+                    onClick = { viewModel.setTypeFilter(null) }
+                )
+            }
+            item {
+                MovieFilterChip(
+                    label = if (isArabic) "أفلام" else "Movies",
+                    isSelected = currentFilter == "movie",
+                    onClick = { viewModel.setTypeFilter("movie") }
+                )
+            }
+            item {
+                MovieFilterChip(
+                    label = if (isArabic) "مسلسلات" else "Series",
+                    isSelected = currentFilter == "series",
+                    onClick = { viewModel.setTypeFilter("series") }
+                )
+            }
         }
 
         // Content
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Primary)
+        Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Primary)
+                    }
                 }
-            }
-            errorMessage != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = if (isArabic) "حدث خطأ" else "An error occurred",
-                            color = DangerColor,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = errorMessage ?: "",
-                            color = TextMuted,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(
-                            onClick = { viewModel.refresh() },
-                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
+                errorMessage != null -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = if (isArabic) "إعادة المحاولة" else "Retry",
-                                color = Color.Black,
-                                fontWeight = FontWeight.Bold
+                                text = errorMessage ?: "Error",
+                                color = TextMuted,
+                                fontSize = 13.sp
                             )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { viewModel.refresh() },
+                                colors = ButtonDefaults.buttonColors(containerColor = Primary)
+                            ) {
+                                Text(if (isArabic) "إعادة المحاولة" else "Retry", color = Color.White)
+                            }
                         }
                     }
                 }
-            }
-            movies.isEmpty() -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Movie,
-                            contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                movies.isEmpty() -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            text = if (isArabic) "لا توجد أفلام أو مسلسلات حالياً" else "No movies or series available",
-                            color = TextMuted,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = if (isArabic) "ترقبوا أحدث الإصدارات" else "Stay tuned for latest releases",
-                            color = TextMuted.copy(alpha = 0.6f),
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(top = 4.dp)
+                            text = if (isArabic) "لا توجد أفلام أو مسلسلات" else "No items available",
+                            color = TextMuted
                         )
                     }
                 }
-            }
-            else -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(movies) { movie ->
-                        MovieCard(movie = movie, isArabic = isArabic)
+                else -> {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(movies) { movie ->
+                            MovieCard(
+                                movie = movie,
+                                isArabic = isArabic,
+                                onClick = { url -> onMovieClick(url) }
+                            )
+                        }
                     }
                 }
             }
@@ -193,98 +157,71 @@ private fun MovieFilterChip(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    FilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        },
-        colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Primary,
-            selectedLabelColor = Color.Black,
-            containerColor = BgSecondary,
-            labelColor = TextMuted
-        ),
-        border = FilterChipDefaults.filterChipBorder(
-            borderColor = Color(0x33FFFFFF),
-            selectedBorderColor = Primary,
-            enabled = true,
-            selected = isSelected
-        ),
-        shape = RoundedCornerShape(20.dp)
-    )
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (isSelected) Primary else Color(0xFF1E1E1E))
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = label,
+            color = if (isSelected) Color.White else Color.Gray,
+            fontSize = 14.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+        )
+    }
 }
 
 @Composable
 private fun MovieCard(
     movie: MovieDto,
-    isArabic: Boolean
+    isArabic: Boolean,
+    onClick: (MovieDto) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = BgSecondary)
+            .aspectRatio(0.66f) // 2:3 aspect ratio for posters
+            .clickable { onClick(movie) },
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Poster Image or Gradient Placeholder
+            // Poster Image
             if (!movie.poster_url.isNullOrEmpty()) {
                 AsyncImage(
                     model = movie.poster_url,
                     contentDescription = movie.title,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(12.dp)),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color(0xFF2E1C4E), Color(0xFF0C0914))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = Primary,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                Box(modifier = Modifier.fillMaxSize().background(Color.DarkGray))
             }
 
-            // Gradient overlay at bottom
+            // Gradient overlay
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .align(Alignment.BottomCenter)
+                    .fillMaxSize()
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xDD000000))
+                            colors = listOf(Color.Transparent, Color(0xDD000000)),
+                            startY = 200f
                         )
                     )
             )
 
-            // Type Badge (top-right)
+            // Tag Badge (top-right)
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp)
+                    .padding(4.dp)
                     .background(
                         color = if (movie.type == "series") Color(0xFF6C3FC5) else Primary,
-                        shape = RoundedCornerShape(6.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
                     text = if (isArabic) {
@@ -293,65 +230,42 @@ private fun MovieCard(
                         if (movie.type == "series") "Series" else "Movie"
                     },
                     color = Color.White,
-                    fontSize = 9.sp,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            // Bottom Info
+            // Title and Info
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(10.dp)
+                    .padding(8.dp)
             ) {
-                // Title
                 Text(
-                    text = if (isArabic) {
-                        movie.title_ar ?: movie.title
-                    } else {
-                        movie.title
-                    },
+                    text = if (isArabic && !movie.title_ar.isNullOrEmpty()) movie.title_ar else movie.title,
                     color = Color.White,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                // Year and Rating Row
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFACC15), modifier = Modifier.size(10.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = String.format("%.1f", movie.rating ?: 0.0),
+                        color = Color(0xFFFACC15),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     if (movie.year != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = movie.year.toString(),
-                            color = TextMuted,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
+                            color = Color.LightGray,
+                            fontSize = 10.sp
                         )
-                    }
-
-                    if (movie.rating != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = null,
-                                tint = Primary,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = String.format("%.1f", movie.rating),
-                                color = Primary,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
                     }
                 }
             }

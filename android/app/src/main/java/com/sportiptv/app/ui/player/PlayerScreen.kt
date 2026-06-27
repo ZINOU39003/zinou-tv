@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.rememberCoroutineScope
@@ -98,6 +100,8 @@ enum class AspectRatioMode {
 fun PlayerScreen(
     channelId: Long,
     directStreamUrl: String? = null,
+    directTitle: String = "بث مباشر للمباراة",
+    directPoster: String = "",
     onBackClick: () -> Unit,
     viewModel: PlayerViewModel = hiltViewModel()
 ) {
@@ -107,13 +111,11 @@ fun PlayerScreen(
     val activity = remember(context) { context as? android.app.Activity }
 
     DisposableEffect(Unit) {
-        val originalOrientation = activity?.requestedOrientation ?: android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-        
-        // Force Landscape Sensor mode
-        activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-        
-        // Hide status and navigation bars for true fullscreen
         val window = activity?.window
+        val originalOrientation = activity?.requestedOrientation ?: android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        // Force landscape orientation for the player
+        activity?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
         if (window != null) {
             androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
             val controller = androidx.core.view.WindowCompat.getInsetsController(window, window.decorView)
@@ -122,7 +124,7 @@ fun PlayerScreen(
         }
         
         onDispose {
-            // Restore original orientation and system UI
+            // Restore original orientation when leaving player
             activity?.requestedOrientation = originalOrientation
             if (window != null) {
                 androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, true)
@@ -137,12 +139,12 @@ fun PlayerScreen(
         if (!directStreamUrl.isNullOrBlank()) {
             val mockChannel = Channel(
                 id = 0L,
-                name = "Direct Match Stream",
-                nameAr = "بث مباشر للمباراة",
+                name = directTitle,
+                nameAr = directTitle,
                 categoryId = 0L,
-                categoryName = "World Cup",
-                categoryNameAr = "كأس العالم",
-                logoUrl = "https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/2026_FIFA_World_Cup.svg/200px-2026_FIFA_World_Cup.svg.png",
+                categoryName = "عام",
+                categoryNameAr = "عام",
+                logoUrl = if (directPoster.isNotBlank()) directPoster else "https://upload.wikimedia.org/wikipedia/en/thumb/e/e3/2026_FIFA_World_Cup.svg/200px-2026_FIFA_World_Cup.svg.png",
                 streamUrl = directStreamUrl,
                 streamType = "M3U8",
                 quality = "FHD",
@@ -233,10 +235,66 @@ fun VideoPlayer(
     val gestureScope = rememberCoroutineScope()
     val isArabic = remember { java.util.Locale.getDefault().language == "ar" }
 
+    val castContext = remember(context) {
+        try {
+            com.google.android.gms.cast.framework.CastContext.getSharedInstance(context)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    var isCasting by remember { mutableStateOf(false) }
+
+    val castPlayer = remember(castContext) {
+        castContext?.let { context ->
+            val player = androidx.media3.cast.CastPlayer(context)
+            isCasting = player.isCastSessionAvailable
+            
+            player.addListener(object : androidx.media3.common.Player.Listener {
+                override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+                    isCasting = player.isCastSessionAvailable
+                }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    isCasting = player.isCastSessionAvailable
+                }
+            })
+            
+            // Also listen to Cast Session Manager directly for instant UI updates
+            context.sessionManager.addSessionManagerListener(
+                object : com.google.android.gms.cast.framework.SessionManagerListener<com.google.android.gms.cast.framework.CastSession> {
+                    override fun onSessionStarted(session: com.google.android.gms.cast.framework.CastSession, sessionId: String) { isCasting = true }
+                    override fun onSessionResumed(session: com.google.android.gms.cast.framework.CastSession, wasSuspended: Boolean) { isCasting = true }
+                    override fun onSessionEnded(session: com.google.android.gms.cast.framework.CastSession, error: Int) { isCasting = false }
+                    override fun onSessionSuspended(session: com.google.android.gms.cast.framework.CastSession, reason: Int) { isCasting = false }
+                    override fun onSessionStarting(session: com.google.android.gms.cast.framework.CastSession) {}
+                    override fun onSessionStartFailed(session: com.google.android.gms.cast.framework.CastSession, error: Int) {}
+                    override fun onSessionEnding(session: com.google.android.gms.cast.framework.CastSession) {}
+                    override fun onSessionResuming(session: com.google.android.gms.cast.framework.CastSession, sessionId: String) {}
+                    override fun onSessionResumeFailed(session: com.google.android.gms.cast.framework.CastSession, error: Int) {}
+                }, com.google.android.gms.cast.framework.CastSession::class.java
+            )
+            player
+        }
+    }
+
     DisposableEffect(Unit) {
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            activity?.setPictureInPictureParams(
+                android.app.PictureInPictureParams.Builder()
+                    .setAutoEnterEnabled(true)
+                    .build()
+            )
+        }
         onDispose {
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                activity?.setPictureInPictureParams(
+                    android.app.PictureInPictureParams.Builder()
+                        .setAutoEnterEnabled(false)
+                        .build()
+                )
+            }
         }
     }
 
@@ -296,16 +354,22 @@ fun VideoPlayer(
         androidx.media3.datasource.okhttp.OkHttpDataSource.Factory(okhttpClient)
     }
 
-    // Initialize ExoPlayer with custom network request headers and optimized rendering pipeline
+    // Initialize ExoPlayer with custom network request headers, optimized rendering pipeline, and TS stream support
     val exoPlayer = remember(channel.id) {
-        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context)
+        val extractorsFactory = androidx.media3.extractor.DefaultExtractorsFactory()
+            .setTsExtractorFlags(
+                androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory.FLAG_ALLOW_NON_IDR_KEYFRAMES or
+                androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory.FLAG_DETECT_ACCESS_UNITS
+            )
+
+        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(context, extractorsFactory)
             .setDataSourceFactory(dataSourceFactory)
 
         val renderersFactory = androidx.media3.exoplayer.DefaultRenderersFactory(context)
             .forceEnableMediaCodecAsynchronousQueueing()
             .setEnableDecoderFallback(true)
 
-        ExoPlayer.Builder(context, renderersFactory)
+        androidx.media3.exoplayer.ExoPlayer.Builder(context, renderersFactory)
             .setMediaSourceFactory(mediaSourceFactory)
             .build()
             .apply {
@@ -461,6 +525,8 @@ fun VideoPlayer(
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
     val searchCategoryQuery by viewModel.searchCategoryQuery.collectAsState()
     val searchChannelQuery by viewModel.searchChannelQuery.collectAsState()
+    val epgPrograms by viewModel.epgPrograms.collectAsState()
+    var showEpgOverlay by remember { mutableStateOf(false) }
 
     // Gestures states
     val audioManager = remember { context.getSystemService(android.content.Context.AUDIO_SERVICE) as android.media.AudioManager }
@@ -482,6 +548,22 @@ fun VideoPlayer(
         if (showControls && !drawerOpen && activeDragBrightness == null && activeDragVolume == null && !isLocked) {
             kotlinx.coroutines.delay(5000)
             showControls = false
+        }
+    }
+
+    // Auto-dismiss volume overlay after 2 seconds of no change
+    LaunchedEffect(activeDragVolume) {
+        if (activeDragVolume != null) {
+            kotlinx.coroutines.delay(2000)
+            activeDragVolume = null
+        }
+    }
+
+    // Auto-dismiss brightness overlay after 2 seconds of no change
+    LaunchedEffect(activeDragBrightness) {
+        if (activeDragBrightness != null) {
+            kotlinx.coroutines.delay(2000)
+            activeDragBrightness = null
         }
     }
 
@@ -546,12 +628,29 @@ fun VideoPlayer(
                         viewModel.loadChannel(channel.id)
                     }
                 } else {
-                    playbackError = "Stream failed: ${error.localizedMessage ?: "Connection reset"}. Retrying…"
-                    isLoading = true
-                    android.util.Log.e("VideoPlayer", "ExoPlayer error occurred: ${error.message}", error)
-                    
-                    if (channel.id != 0L) {
-                        viewModel.loadChannel(channel.id)
+                    val currentIndex = availableStreams.indexOf(activeStream)
+                    if (currentIndex != -1 && currentIndex < availableStreams.size - 1) {
+                        // We have backup servers available, auto-switch immediately!
+                        val nextStream = availableStreams[currentIndex + 1]
+                        android.util.Log.e("VideoPlayer", "Stream failed, auto-switching to next stream: ${nextStream.label}", error)
+                        
+                        // We must update the activeStream state, but wait, we are inside an object. 
+                        // Because activeStream is a MutableState, modifying it will trigger a recomposition.
+                        // However, we should be careful about state mutation inside a callback.
+                        activeStream = nextStream
+                        playbackError = null
+                        isLoading = true
+                        
+                        // Show a temporary snackbar or toast? We don't have snackbar host here, so we just log it.
+                    } else {
+                        // Exhausted all backup servers. Reload channel data from backend as last resort.
+                        playbackError = "تم تعطل جميع السيرفرات. جاري تحديث الروابط…"
+                        isLoading = true
+                        android.util.Log.e("VideoPlayer", "All streams exhausted. Reloading channel from API...", error)
+                        
+                        if (channel.id != 0L) {
+                            viewModel.loadChannel(channel.id)
+                        }
                     }
                 }
             }
@@ -564,7 +663,7 @@ fun VideoPlayer(
     }
 
     // Set stream source when active stream changes or ad status changes
-    LaunchedEffect(activeStream, channel.streamUrl, channel.backupUrl, isAdPlaying) {
+    LaunchedEffect(activeStream, channel.streamUrl, channel.backupUrl, isAdPlaying, isCasting) {
         if (isAdPlaying) {
             // Wait until the ad finishes playing before loading the stream
             return@LaunchedEffect
@@ -575,13 +674,6 @@ fun VideoPlayer(
         // Clean any syntax errors in the URL (e.g. replace "&?" with "&")
         val url = rawUrl.replace("&?", "&")
         val streamUri = Uri.parse(url)
-        val mimeType = when {
-            url.contains(".m3u8") -> MimeTypes.APPLICATION_M3U8
-            url.contains(".mpd") -> MimeTypes.APPLICATION_MPD
-            url.contains(".ts") -> MimeTypes.VIDEO_MP2T
-            url.endsWith(".mp4") || url.contains(".mp4") -> MimeTypes.VIDEO_MP4
-            else -> MimeTypes.APPLICATION_M3U8
-        }
 
         val drmLicenseUrl = channel.drmLicenseUrl
         val isClearKey = !drmLicenseUrl.isNullOrBlank() && (
@@ -591,7 +683,6 @@ fun VideoPlayer(
 
         val mediaItemBuilder = MediaItem.Builder()
             .setUri(streamUri)
-            .setMimeType(mimeType)
 
         if (!isClearKey && !drmLicenseUrl.isNullOrBlank()) {
             val drmConfigurationBuilder = MediaItem.DrmConfiguration.Builder(androidx.media3.common.C.WIDEVINE_UUID)
@@ -624,6 +715,19 @@ fun VideoPlayer(
         }
 
         val mediaItem = mediaItemBuilder.build()
+
+        if (isCasting && castPlayer != null) {
+            // Stop local playback
+            exoPlayer.pause()
+            
+            // Start cast playback
+            castPlayer.setMediaItem(mediaItem)
+            castPlayer.prepare()
+            castPlayer.play()
+            return@LaunchedEffect
+        } else {
+            castPlayer?.pause()
+        }
 
         val drmSessionManager = if (isClearKey) {
             try {
@@ -678,30 +782,6 @@ fun VideoPlayer(
             }
         } else null
 
-        val mediaSource = when (mimeType) {
-            MimeTypes.APPLICATION_MPD -> {
-                val factory = androidx.media3.exoplayer.dash.DashMediaSource.Factory(dataSourceFactory)
-                if (drmSessionManager != null) {
-                    factory.setDrmSessionManagerProvider { drmSessionManager }
-                }
-                factory.createMediaSource(mediaItem)
-            }
-            MimeTypes.APPLICATION_M3U8 -> {
-                val factory = androidx.media3.exoplayer.hls.HlsMediaSource.Factory(dataSourceFactory)
-                if (drmSessionManager != null) {
-                    factory.setDrmSessionManagerProvider { drmSessionManager }
-                }
-                factory.createMediaSource(mediaItem)
-            }
-            else -> {
-                val factory = androidx.media3.exoplayer.source.ProgressiveMediaSource.Factory(dataSourceFactory)
-                if (drmSessionManager != null) {
-                    factory.setDrmSessionManagerProvider { drmSessionManager }
-                }
-                factory.createMediaSource(mediaItem)
-            }
-        }
-
         // Set dynamic resolution cap based on active server or channel quality settings
         val activeQuality = activeStream?.let { stream ->
             if (stream.isServer) {
@@ -723,7 +803,7 @@ fun VideoPlayer(
             .setMaxVideoSize(maxVideoSize.first, maxVideoSize.second)
             .build()
 
-        exoPlayer.setMediaSource(mediaSource)
+        exoPlayer.setMediaItem(mediaItem)
         exoPlayer.prepare()
         exoPlayer.play()
     }
@@ -1179,6 +1259,12 @@ fun VideoPlayer(
                     }
                 }
         ) {
+            val playerModifier = if (drawerOpen && !isLocked) {
+                Modifier.fillMaxHeight().fillMaxWidth(0.55f).align(Alignment.CenterEnd)
+            } else {
+                Modifier.fillMaxSize()
+            }
+            Box(modifier = playerModifier) {
             // ── 1. ExoPlayer / WebView Layer ──────────────────
             if (isYouTube) {
                 LaunchedEffect(youtubeVideoId) {
@@ -1364,6 +1450,9 @@ fun VideoPlayer(
                                         delay(1200)
                                         activeDragBrightness = null
                                     }
+                                },
+                                onDragCancel = {
+                                    activeDragBrightness = null
                                 }
                             )
                         }
@@ -1391,6 +1480,9 @@ fun VideoPlayer(
                                         delay(1200)
                                         activeDragVolume = null
                                     }
+                                },
+                                onDragCancel = {
+                                    activeDragVolume = null
                                 }
                             )
                         }
@@ -1463,6 +1555,13 @@ fun VideoPlayer(
 
                     // Top Action Icons
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // EPG Program Guide
+                        if (epgPrograms.isNotEmpty()) {
+                            IconButton(onClick = { showEpgOverlay = true }) {
+                                Icon(Icons.Default.DateRange, "جدول البرامج", tint = Color.White)
+                            }
+                        }
+
                         // CC Subtitle icon
                         IconButton(onClick = {}) {
                             Icon(Icons.Default.ClosedCaption, "Subtitles", tint = Color.White)
@@ -1500,19 +1599,10 @@ fun VideoPlayer(
                             Icon(Icons.Default.Search, "Search", tint = Color.White)
                         }
 
-                        // Cast to TV (Screen Mirroring)
-                        IconButton(
-                            onClick = {
-                                try {
-                                    val intent = android.content.Intent("android.settings.CAST_SETTINGS")
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    android.widget.Toast.makeText(context, if (isArabic) "إعدادات البث غير متوفرة" else "Cast settings not available", android.widget.Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        ) {
-                            Icon(Icons.Default.Cast, "Cast to TV", tint = Color.White)
-                        }
+                        // Cast to TV (Native Google Cast)
+                        com.sportiptv.app.ui.components.CastButton(
+                            modifier = Modifier.size(48.dp).padding(12.dp)
+                        )
 
                         // Picture in Picture
                         IconButton(
@@ -1798,6 +1888,7 @@ fun VideoPlayer(
                 }
             }
         }
+        }
 
         // ── 8. Side Channel Switcher Drawer (Image 2) ──────
         if (drawerOpen) {
@@ -1821,7 +1912,7 @@ fun VideoPlayer(
             exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut(),
             modifier = Modifier
                 .fillMaxHeight()
-                .width(460.dp)
+                .width(540.dp)
                 .background(Color(0xFA0F0B18))
                 .border(BorderStroke(1.dp, GlassBorder), shape = RoundedCornerShape(0.dp))
                 .align(Alignment.CenterStart)
@@ -1883,6 +1974,7 @@ fun VideoPlayer(
                                 name = categoryName,
                                 isSelected = selectedCategoryId == cat.id,
                                 count = count,
+                                logoUrl = cat.icon,
                                 onClick = { viewModel.selectDrawerCategory(cat.id) }
                             )
                         }
@@ -1967,6 +2059,85 @@ fun VideoPlayer(
                 }
             }
         }
+
+        // ── 8. EPG Overlay ──────────────────────────────────────
+        AnimatedVisibility(
+            visible = showEpgOverlay,
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.5f)
+                    .background(Color(0xE60F0B18))
+                    .clickable(enabled = false) {}
+            ) {
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (isArabic) "جدول البرامج" else "Program Guide",
+                            color = Color.White,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(onClick = { showEpgOverlay = false }) {
+                            Icon(Icons.Default.Close, "Close EPG", tint = Color.White)
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(epgPrograms) { program ->
+                            val formatter = java.text.SimpleDateFormat("HH:mm", java.util.Locale.US)
+                            val start = formatter.format(java.util.Date(program.startTime))
+                            val end = formatter.format(java.util.Date(program.stopTime))
+                            
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0x33FFFFFF), RoundedCornerShape(8.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "$start - $end",
+                                    color = Primary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(100.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = program.title,
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    if (!program.description.isNullOrBlank()) {
+                                        Text(
+                                            text = program.description,
+                                            color = Color.LightGray,
+                                            fontSize = 12.sp,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 }
@@ -1976,6 +2147,7 @@ fun CategoryListItem(
     name: String,
     isSelected: Boolean,
     count: Int,
+    logoUrl: String? = null,
     onClick: () -> Unit
 ) {
     Row(
@@ -1993,6 +2165,17 @@ fun CategoryListItem(
                     .width(3.dp)
                     .height(14.dp)
                     .background(Primary, shape = RoundedCornerShape(50))
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+        }
+        if (!logoUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                contentScale = ContentScale.Fit
             )
             Spacer(modifier = Modifier.width(6.dp))
         }
@@ -2053,9 +2236,9 @@ fun ChannelListItem(
         Text(
             text = if (isArabic && !channel.nameAr.isNullOrEmpty()) channel.nameAr else channel.name,
             color = if (isPlaying) Primary else Color.White,
-            fontSize = 13.sp,
+            fontSize = 11.sp,
             fontWeight = if (isPlaying) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )

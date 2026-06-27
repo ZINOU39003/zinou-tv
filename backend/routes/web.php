@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ChannelController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\ActivationCodeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\TournamentController;
@@ -88,6 +89,24 @@ Route::middleware(['web', 'auth', 'admin', 'security.headers'])->prefix('admin')
     Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->name('packages.destroy');
     Route::post('/packages/reorder', [PackageController::class, 'reorder'])->name('packages.reorder');
     Route::get('/packages/by-category', [PackageController::class, 'getByCategory'])->name('packages.by-category');
+
+    // IPTV Providers Management
+    Route::get('/providers', [ProviderController::class, 'index'])->name('providers.index');
+    Route::get('/providers/create', [ProviderController::class, 'create'])->name('providers.create');
+    Route::post('/providers', [ProviderController::class, 'store'])->name('providers.store');
+    Route::get('/providers/{provider}/edit', [ProviderController::class, 'edit'])->name('providers.edit');
+    Route::put('/providers/{provider}', [ProviderController::class, 'update'])->name('providers.update');
+    Route::delete('/providers/{provider}', [ProviderController::class, 'destroy'])->name('providers.destroy');
+    Route::get('/providers/{provider}/import', [ProviderController::class, 'showImport'])->name('providers.import');
+    Route::post('/providers/{provider}/import-chunk', [ProviderController::class, 'importChunk'])->name('providers.import.chunk');
+
+    // Category Filters Management
+    Route::resource('category_filters', \App\Http\Controllers\Admin\CategoryFilterController::class)->except(['show']);
+
+    // Backup Management
+    Route::get('/backups', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backups.index');
+    Route::get('/backups/download', [\App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backups.download');
+    Route::post('/backups/restore', [\App\Http\Controllers\Admin\BackupController::class, 'restore'])->name('backups.restore');
 
     // Live Streaming Channels Management
     Route::get('/channels', [ChannelController::class, 'index'])->name('channels.index');

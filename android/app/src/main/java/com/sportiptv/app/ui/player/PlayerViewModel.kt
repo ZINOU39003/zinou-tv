@@ -16,15 +16,21 @@ import com.sportiptv.app.domain.model.Channel
 import com.sportiptv.app.domain.model.Resource
 import com.sportiptv.app.domain.repository.ChannelRepository
 import com.sportiptv.app.domain.repository.SubscriptionRepository
+import com.sportiptv.app.domain.repository.EpgRepository
+import com.sportiptv.app.domain.model.EpgProgram
 import com.sportiptv.app.domain.usecase.ToggleFavoriteUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
+    private val epgRepository: EpgRepository,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val authRepository: AuthRepository,
     private val subscriptionRepository: SubscriptionRepository,
@@ -41,6 +47,12 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch {
             subscriptionRepository.getAppConfig().collect { result ->
                 _appConfigState.value = result
+                if (result is Resource.Success) {
+                    val epgUrl = result.data.epg_url
+                    if (epgUrl.isNotBlank()) {
+                        epgRepository.fetchEpg(epgUrl).collect()
+                    }
+                }
             }
         }
     }
@@ -63,6 +75,14 @@ class PlayerViewModel @Inject constructor(
     val categories: StateFlow<List<Category>> = channelRepository.getCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val epgPrograms = _channelState.flatMapLatest { state ->
+        if (state is Resource.Success) {
+            epgRepository.getProgramsForChannel(state.data.name)
+        } else {
+            flowOf(emptyList())
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Sibling channels in the category of the currently playing channel
     val siblingChannels = combine(_channelState, _allChannels) { state, all ->
         if (state is Resource.Success) {
@@ -73,12 +93,13 @@ class PlayerViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Categories filtered by the category search query
+    // Categories filtered by the category search query AND channelsCount > 0
     val drawerCategories = combine(categories, _searchCategoryQuery) { list, query ->
+        val nonEmptyList = list.filter { it.channelsCount > 0 }
         if (query.isBlank()) {
-            list
+            nonEmptyList
         } else {
-            list.filter {
+            nonEmptyList.filter {
                 it.name.contains(query, ignoreCase = true) ||
                 (it.nameAr ?: "").contains(query, ignoreCase = true)
             }

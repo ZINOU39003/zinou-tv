@@ -54,7 +54,21 @@ class SubscriptionRepositoryImpl @Inject constructor(
                     emit(Resource.Error("Invalid response data."))
                 }
             } else {
-                emit(Resource.Error(response.body()?.message ?: "Failed to activate license."))
+                val errorBody = response.errorBody()?.string()
+                var errorMessage = "Failed to activate license."
+                if (errorBody != null) {
+                    try {
+                        val json = org.json.JSONObject(errorBody)
+                        if (json.has("message")) {
+                            errorMessage = json.getString("message")
+                        } else if (json.has("error")) {
+                            errorMessage = json.getString("error")
+                        }
+                    } catch (e: Exception) {
+                        // Ignore parse errors
+                    }
+                }
+                emit(Resource.Error(errorMessage))
             }
         } catch (e: Exception) {
             emit(Resource.Error("Network error: ${e.localizedMessage ?: "Connection timed out"}"))

@@ -120,6 +120,7 @@ class SettingController extends Controller
             'updateMessage' => Setting::get('update_message', 'يتوفر تحديث جديد. يرجى تحديث التطبيق للمتابعة.'),
             'latestApkUrl' => Setting::get('latest_apk_url', ''),
             'latestAppVersion' => Setting::get('latest_app_version', '1.0.0'),
+            'onesignalAppId' => Setting::get('onesignal_app_id', ''),
         ]);
     }
 
@@ -130,6 +131,7 @@ class SettingController extends Controller
             'latest_app_version' => 'required|string|max:20',
             'update_message' => 'nullable|string|max:500',
             'latest_apk_url' => 'nullable|url|max:2048',
+            'onesignal_app_id' => 'nullable|string|max:255',
         ]);
 
         Setting::set('min_app_version', $request->input('min_app_version'));
@@ -140,6 +142,8 @@ class SettingController extends Controller
         if ($request->filled('latest_apk_url')) {
             Setting::set('latest_apk_url', $request->input('latest_apk_url'));
         }
+        
+        Setting::set('onesignal_app_id', $request->input('onesignal_app_id', ''));
 
         return redirect()->back()->with('success', 'تم تحديث إعدادات التطبيق بنجاح.');
     }

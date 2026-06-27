@@ -7,6 +7,7 @@ import com.sportiptv.app.data.local.db.dao.CategoryDao
 import com.sportiptv.app.data.local.db.dao.ChannelDao
 import com.sportiptv.app.data.local.db.dao.FavoriteDao
 import com.sportiptv.app.data.local.db.dao.PackageDao
+import com.sportiptv.app.data.local.db.dao.StreamLogDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -47,5 +48,10 @@ object DatabaseModule {
     @Provides
     fun providePackageDao(database: SportDatabase): PackageDao {
         return database.packageDao()
+    }
+
+    @Provides
+    fun provideStreamLogDao(database: SportDatabase): StreamLogDao {
+        return database.streamLogDao()
     }
 }
